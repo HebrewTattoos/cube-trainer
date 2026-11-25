@@ -1,7 +1,7 @@
 {
-  "name": "Cube Trainer",
-  "short_name": "Cubes",
-  "description": "Train spatial reasoning with rotating-cube questions.",
+  "name": "Reasoning Trainer",
+  "short_name": "Reasoning",
+  "description": "Train spatial reasoning and number series for aptitude tests.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

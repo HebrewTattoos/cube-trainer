@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Cube Trainer">
+<meta name="apple-mobile-web-app-title" content="Reasoning Trainer">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<title>Cube Trainer</title>
+<title>Reasoning Trainer</title>
 <style>
   :root {
     --bg: #f3f1ec; --fg: #1c1c1e; --muted: #6b6a66; --card: #fffdf8; --line: #dcd8cf;
@@ -36,12 +36,18 @@
   p { margin: 0 0 12px; }
   .muted { color: var(--muted); }
   button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   /* home */
   .hero { display: flex; gap: 14px; align-items: center; margin-bottom: 18px; }
-  .hero .cube { width: 92px; flex: none; background: var(--paper); border-radius: 18px; padding: 8px; }
+  .heroArt { flex: none; width: 92px; height: 92px; background: var(--paper); border-radius: 18px; padding: 8px; display: grid; place-items: center; }
+  .heroArt .cube { width: 100%; }
+  .heroArt .heroTerms { font-weight: 800; font-size: 17px; line-height: 1.15; text-align: center; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .heroArt .heroTerms b { color: var(--accent); }
   .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--card); border: 1px solid var(--line);
          border-radius: 14px; padding: 4px; gap: 4px; margin: 8px 0 6px; }
+  .seg.two { grid-template-columns: repeat(2, 1fr); }
   .seg button { border: 0; background: transparent; padding: 11px 6px; border-radius: 10px; font-weight: 600; }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
   .lvl-desc { min-height: 2.9em; font-size: 14px; }
@@ -50,7 +56,7 @@
   .secondary { background: var(--card); border: 1px solid var(--line); }
   .secondary small, .primary small { display: block; font-weight: 400; opacity: .8; font-size: 13px; }
   .stats { margin-top: 22px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px 14px; }
-  .stats div { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .stats div { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
   .stats div:last-child { border-bottom: 0; }
   details { margin-top: 18px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
   summary { font-weight: 600; cursor: pointer; }
@@ -65,11 +71,18 @@
   .bar .timer.low { color: var(--bad); border-color: var(--bad); }
   .sample { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 14px 18px 10px; margin: 0 auto 10px; width: min(68%, 280px); position: relative; }
   .tag { position: absolute; left: 12px; top: 8px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #77756f; }
+  .seriesCard { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 32px 14px 24px; margin: 0 auto 10px; position: relative; }
+  .seriesCard .tag { color: var(--muted); }
+  .terms { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 16px; font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .term.q { color: var(--accent); border-bottom: 3px solid var(--accent); min-width: 1.3em; text-align: center; }
   .prompt { text-align: center; color: var(--muted); font-size: 15px; margin: 4px 0 12px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid.five .opt:last-child { grid-column: 1 / -1; }
   .opt { position: relative; background: var(--paper); border: 3px solid var(--line); border-radius: 18px; padding: 22px 10px 10px; transition: transform .08s; }
   .opt:active { transform: scale(.98); }
   .opt .letter { position: absolute; left: 10px; top: 6px; font-weight: 700; color: #77756f; font-size: 15px; }
+  .opt.num { background: var(--card); padding: 22px 10px 14px; text-align: center; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--fg); }
+  .opt.num .letter { color: var(--muted); }
   .opt.chosen { border-color: var(--accent); }
   .opt.correct { border-color: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 28%, transparent); }
   .opt.wrong { border-color: var(--bad); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 25%, transparent); }
@@ -77,12 +90,19 @@
   .opt .mark { position: absolute; right: 10px; top: 4px; font-weight: 800; font-size: 18px; }
   .opt.correct .mark { color: var(--good); }
   .opt.wrong .mark { color: var(--bad); }
+  .typed { display: flex; gap: 10px; margin-top: 6px; }
+  .typed input { flex: 1; min-width: 0; font: inherit; font-size: 28px; font-weight: 700; text-align: center; padding: 12px; border-radius: 14px;
+                 border: 3px solid var(--line); background: var(--card); color: var(--fg); font-variant-numeric: tabular-nums; }
+  .typed input.correct { border-color: var(--good); }
+  .typed input.wrong { border-color: var(--bad); }
+  .typed .primary { width: auto; margin: 0; padding: 0 24px; }
   .cube { display: block; width: 100%; height: auto; }
   .cube .face { stroke: var(--ink); stroke-width: 2.2; stroke-linejoin: round; }
   .cube .s { fill: none; stroke: var(--ink); stroke-width: 2.4; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
   .cube .f { fill: var(--ink); stroke: none; }
   .feedback { min-height: 28px; margin: 14px 0 0; text-align: center; font-weight: 650; }
   .feedback.good { color: var(--good); } .feedback.bad { color: var(--bad); }
+  .explain { margin: 8px 0 0; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; font-size: 15px; }
   .row { display: flex; gap: 10px; } .row > * { flex: 1; }
 
   /* results */
@@ -101,14 +121,19 @@
   <!-- HOME -->
   <section id="home">
     <div class="hero">
-      <div id="heroCube"></div>
+      <div class="heroArt" id="heroArt"></div>
       <div>
-        <h1>Cube Trainer</h1>
-        <div class="muted">Spatial reasoning: which cube is the sample, just turned?</div>
+        <h1>Reasoning Trainer</h1>
+        <div class="muted" id="tagline"></div>
       </div>
     </div>
 
-    <h2>Level</h2>
+    <div class="seg two" id="moduleSeg" role="group" aria-label="Exercise type">
+      <button data-module="cubes">Cubes</button>
+      <button data-module="series">Number series</button>
+    </div>
+
+    <h2 style="margin-top:14px">Level</h2>
     <div class="seg" id="levelSeg" role="group" aria-label="Level">
       <button data-level="easy">Easy</button>
       <button data-level="medium">Medium</button>
@@ -116,20 +141,22 @@
     </div>
     <p class="muted lvl-desc" id="levelDesc"></p>
 
-    <button class="primary" id="btnTimed">Timed test<small>10 questions · 5 minutes · no feedback until the end</small></button>
+    <div id="entryBox" hidden>
+      <h2>Answer by</h2>
+      <div class="seg two" id="entrySeg" role="group" aria-label="Answer mode">
+        <button data-entry="choose">Choosing</button>
+        <button data-entry="type">Typing</button>
+      </div>
+    </div>
+
+    <button class="primary" id="btnTimed">Timed test<small id="timedSub"></small></button>
     <button class="secondary" id="btnPractice">Practice<small>endless, instant feedback after every answer</small></button>
 
     <div class="stats" id="stats"></div>
 
     <details>
       <summary>How to solve these</summary>
-      <ul>
-        <li>All six faces of a cube are different, and every question is generated fresh, so you can’t memorise answers.</li>
-        <li>Find two faces that appear in both the sample and an option, then check which side of which face the other symbol sits.</li>
-        <li>Symbols without direction (circle, cross, dot) only tell you which face is which. Lines, diagonals and triangles also tell you how the face is turned.</li>
-        <li>Rule out options first: a wrong cube usually has two faces swapped, a symbol turned by 90°, or a face that can’t sit next to the others.</li>
-        <li>Opposite faces never appear together. If one option shows two faces that you know are opposite, it is wrong.</li>
-      </ul>
+      <ul id="tips"></ul>
     </details>
   </section>
 
@@ -140,10 +167,17 @@
       <div class="progress" id="progress"></div>
       <div class="timer" id="timer" hidden></div>
     </div>
-    <div class="sample"><span class="tag">Sample</span><div id="sampleCube"></div></div>
-    <div class="prompt">Which cube is the same one, turned?</div>
+    <div class="sample" id="cubeSample"><span class="tag">Sample</span><div id="sampleCube"></div></div>
+    <div class="seriesCard" id="seriesCard" hidden><span class="tag">Series</span><div class="terms" id="terms"></div></div>
+    <div class="prompt" id="prompt"></div>
     <div class="grid" id="options"></div>
+    <form class="typed" id="typed" hidden>
+      <label class="sr" for="typedInput">Your answer</label>
+      <input id="typedInput" type="text" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="?">
+      <button class="primary" id="typedGo" type="submit">Check</button>
+    </form>
     <div class="feedback" id="feedback" aria-live="polite"></div>
+    <div class="explain" id="explain" hidden></div>
     <div class="row" id="nav" style="margin-top:6px">
       <button class="secondary" id="btnPrev" hidden>Previous</button>
       <button class="primary" id="btnNext" hidden>Next</button>
@@ -164,28 +198,74 @@
 </main>
 
 <script src="engine.js"></script>
+<script src="series.js"></script>
 <script>
 (function () {
   'use strict';
-  const E = window.CubeEngine;
+  const CE = window.CubeEngine;
+  const SE = window.SeriesEngine;
   const $ = (s) => document.querySelector(s);
-  const LETTERS = 'abcd';
-  const TIMED_N = 10, TIMED_SECONDS = 300;
+  const LETTERS = 'abcde';
   const KEY = 'cubetrainer.v1';
-  const DESC = {
-    easy: 'Mostly plain symbols. Wrong cubes tend to have the wrong faces next to each other.',
-    medium: 'Half of the faces have a direction. Wrong cubes may be a symbol turned by 90°.',
-    hard: 'Mostly turned symbols, and sometimes the answer shows none of the faces you saw in the sample.',
+
+  const CFG = {
+    cubes: {
+      n: 10, secs: 300,
+      tagline: 'Spatial reasoning: which cube is the sample, just turned?',
+      prompt: 'Which cube is the same one, turned?',
+      desc: {
+        easy: 'Mostly plain symbols. Wrong cubes tend to have the wrong faces next to each other.',
+        medium: 'Half of the faces have a direction. Wrong cubes may be a symbol turned by 90°.',
+        hard: 'Mostly turned symbols, and sometimes the answer shows none of the faces you saw in the sample.',
+      },
+      tips: [
+        'All six faces of a cube are different, and every question is generated fresh, so you can’t memorise answers.',
+        'Find two faces that appear in both the sample and an option, then check which side of which face the other symbol sits.',
+        'Symbols without direction (circle, cross, dot) only tell you which face is which. Lines, diagonals and triangles also tell you how the face is turned.',
+        'Rule out options first: a wrong cube usually has two faces swapped, a symbol turned by 90°, or a face that can’t sit next to the others.',
+        'Opposite faces never appear together. If one option shows two faces that you know are opposite, it is wrong.',
+      ],
+    },
+    series: {
+      n: 10, secs: 360,
+      tagline: 'Number series (Zahlenreihen): which number comes next?',
+      prompt: 'Which number continues the series?',
+      desc: {
+        easy: 'Steady steps, multiplying or halving, steps that grow by one, square numbers.',
+        medium: 'Two series woven together, “×2 + 1” rules, sums of the two numbers before, steps that grow by 2 or 3.',
+        hard: 'Layered rules: add and double in turns, cubes, primes, steps that double, sums plus a constant.',
+      },
+      tips: [
+        'Write the gaps between neighbours first. Equal gaps mean a steady step; gaps that change by a fixed amount mean a growing step.',
+        'If the gaps look random, try ratios (÷ the previous number). Constant ratio means multiplying.',
+        'Numbers jumping up and down usually mean two series woven together. Look at every second number on its own.',
+        'Each number the sum of the two before it (1, 2, 3, 5, 8 …) shows up a lot. So do squares (1, 4, 9 …), cubes (1, 8, 27 …) and primes.',
+        'Every series here has exactly one answer that fits all rules a test would use. After each answer in practice you see the rule.',
+      ],
+    },
   };
 
   // ---------- storage (never required) ----------
   function loadStats() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
   function saveStats(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
-  let stats = loadStats();
-  const lv = (l) => (stats[l] = stats[l] || { answered: 0, correct: 0, best: null });
+  const stats = loadStats();
 
-  // ---------- state ----------
-  const S = { level: stats.level || 'medium', mode: null, qs: [], idx: 0, picks: [], review: false, timer: null, deadline: 0, startedAt: 0, locked: false };
+  const S = {
+    module: stats.module === 'series' ? 'series' : 'cubes',
+    level: ['easy', 'medium', 'hard'].includes(stats.level) ? stats.level : 'medium',
+    entry: stats.entry === 'type' ? 'type' : 'choose',
+    mode: null, qs: [], idx: 0, picks: [], review: false, timer: null, deadline: 0, startedAt: 0, locked: false, result: null,
+  };
+  const cfg = () => CFG[S.module];
+  const keyOf = (m, l) => (m === 'cubes' ? l : 'series_' + l);
+  const lv = (m, l) => (stats[keyOf(m, l)] = stats[keyOf(m, l)] || { answered: 0, correct: 0, best: null });
+  const makeQ = () => {
+    const q = S.module === 'cubes' ? CE.makeQuestion(S.level) : SE.makeQuestion(S.level);
+    q.entry = S.entry;
+    return q;
+  };
+  const isSeries = (q) => !!q.terms;
+  const isRight = (q, p) => p !== null && p !== undefined && (typeof p === 'object' ? p.typed === q.value : p === q.answer);
 
   // ---------- screens ----------
   function show(id) {
@@ -194,18 +274,23 @@
   }
 
   function renderHome() {
+    const c = cfg();
+    document.querySelectorAll('#moduleSeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.module === S.module)));
     document.querySelectorAll('#levelSeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.level === S.level)));
-    $('#levelDesc').textContent = DESC[S.level];
+    document.querySelectorAll('#entrySeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.entry === S.entry)));
+    $('#entryBox').hidden = S.module !== 'series';
+    $('#tagline').textContent = c.tagline;
+    $('#levelDesc').textContent = c.desc[S.level];
+    $('#timedSub').textContent = c.n + ' questions · ' + c.secs / 60 + ' minutes · no feedback until the end';
+    $('#tips').innerHTML = c.tips.map((t) => '<li>' + t + '</li>').join('');
     $('#stats').innerHTML = ['easy', 'medium', 'hard'].map((l) => {
-      const d = lv(l);
+      const d = lv(S.module, l);
       const acc = d.answered ? Math.round((100 * d.correct) / d.answered) + '% of ' + d.answered : '–';
-      const best = d.best == null ? '' : ' · best test ' + d.best + '/' + TIMED_N;
+      const best = d.best == null ? '' : ' · best test ' + d.best + '/' + c.n;
       return '<div><span>' + l[0].toUpperCase() + l.slice(1) + '</span><span class="muted">' + acc + best + '</span></div>';
     }).join('');
-    const hero = E.makeQuestion('medium');
-    $('#heroCube').innerHTML = E.renderCube(hero.sample, { label: 'sample cube' });
-    $('#heroCube').className = 'hero-cube';
-    $('#heroCube').firstChild.style.cssText = 'width:92px;background:var(--paper);border-radius:18px;padding:8px';
+    if (S.module === 'cubes') $('#heroArt').innerHTML = CE.renderCube(CE.makeQuestion('medium').sample, { label: 'sample cube' });
+    else $('#heroArt').innerHTML = '<div class="heroTerms">3 · 6 · 12<br>24 · <b>?</b></div>';
     show('home');
   }
 
@@ -215,11 +300,11 @@
     S.idx = 0;
     S.picks = [];
     S.review = false;
-    S.qs = mode === 'timed' ? Array.from({ length: TIMED_N }, () => E.makeQuestion(S.level)) : [E.makeQuestion(S.level)];
+    S.qs = mode === 'timed' ? Array.from({ length: cfg().n }, makeQ) : [makeQ()];
     clearInterval(S.timer);
     if (mode === 'timed') {
       S.startedAt = Date.now();
-      S.deadline = S.startedAt + TIMED_SECONDS * 1000;
+      S.deadline = S.startedAt + cfg().secs * 1000;
       S.timer = setInterval(tick, 250);
       tick();
     }
@@ -238,96 +323,135 @@
 
   function draw() {
     const q = S.qs[S.idx];
+    const series = isSeries(q);
+    const typed = series && q.entry === 'type';
     S.locked = false;
-    $('#sampleCube').innerHTML = E.renderCube(q.sample, { label: 'sample cube' });
-    $('#options').innerHTML = q.options.map((o, i) =>
-      '<button class="opt" data-i="' + i + '" aria-label="Option ' + LETTERS[i] + '"><span class="letter">' + LETTERS[i] + '</span>' + E.renderCube(o.state, { label: 'option ' + LETTERS[i] }) + '</button>'
-    ).join('');
-    const total = S.mode === 'timed' ? TIMED_N : null;
-    $('#progress').textContent = S.review ? 'Review · question ' + (S.idx + 1) + '/' + TIMED_N
-      : S.mode === 'timed' ? 'Question ' + (S.idx + 1) + '/' + TIMED_N
+    $('#cubeSample').hidden = series;
+    $('#seriesCard').hidden = !series;
+    $('#prompt').textContent = series ? CFG.series.prompt : CFG.cubes.prompt;
+    $('#options').hidden = typed;
+    $('#typed').hidden = !typed;
+    $('#explain').hidden = true;
+    if (series) {
+      $('#terms').innerHTML = q.terms.map((t) => '<span class="term">' + t + '</span>').join('') + '<span class="term q">?</span>';
+      $('#options').className = 'grid five';
+      $('#options').innerHTML = q.options.map((v, i) =>
+        '<button class="opt num" data-i="' + i + '" aria-label="Option ' + LETTERS[i] + ': ' + v + '"><span class="letter">' + LETTERS[i] + '</span>' + v + '</button>'
+      ).join('');
+      const inp = $('#typedInput');
+      inp.value = ''; inp.disabled = false; inp.className = '';
+      $('#typedGo').hidden = false;
+    } else {
+      $('#sampleCube').innerHTML = CE.renderCube(q.sample, { label: 'sample cube' });
+      $('#options').className = 'grid';
+      $('#options').innerHTML = q.options.map((o, i) =>
+        '<button class="opt" data-i="' + i + '" aria-label="Option ' + LETTERS[i] + '"><span class="letter">' + LETTERS[i] + '</span>' + CE.renderCube(o.state, { label: 'option ' + LETTERS[i] }) + '</button>'
+      ).join('');
+    }
+    const n = cfg().n;
+    $('#progress').textContent = S.review ? 'Review · question ' + (S.idx + 1) + '/' + n
+      : S.mode === 'timed' ? 'Question ' + (S.idx + 1) + '/' + n
       : 'Practice · #' + (S.idx + 1) + ' · ' + S.level;
     $('#feedback').textContent = '';
     $('#feedback').className = 'feedback';
     $('#btnNext').hidden = true;
     $('#btnPrev').hidden = true;
     if (S.review) { reveal(S.picks[S.idx]); showReviewNav(); }
-    else if (S.mode === 'practice' && S.picks[S.idx] != null) reveal(S.picks[S.idx]);
-    void total;
+    else if (typed) $('#typedInput').focus({ preventScroll: true });
   }
 
   function reveal(chosen) {
     const q = S.qs[S.idx];
-    document.querySelectorAll('.opt').forEach((el, i) => {
-      el.classList.remove('chosen');
-      if (i === q.answer) { el.classList.add('correct'); el.insertAdjacentHTML('beforeend', '<span class="mark">✓</span>'); }
-      else if (i === chosen) { el.classList.add('wrong'); el.insertAdjacentHTML('beforeend', '<span class="mark">✗</span>'); }
-      else el.classList.add('dim');
-    });
+    const series = isSeries(q);
+    const typed = series && q.entry === 'type';
+    const right = isRight(q, chosen);
+    if (typed) {
+      const inp = $('#typedInput');
+      inp.disabled = true;
+      if (chosen != null) inp.value = chosen.typed;
+      inp.className = chosen == null ? '' : right ? 'correct' : 'wrong';
+      $('#typedGo').hidden = true;
+    } else {
+      document.querySelectorAll('.opt').forEach((el, i) => {
+        el.classList.remove('chosen');
+        if (i === q.answer) { el.classList.add('correct'); el.insertAdjacentHTML('beforeend', '<span class="mark">✓</span>'); }
+        else if (i === chosen) { el.classList.add('wrong'); el.insertAdjacentHTML('beforeend', '<span class="mark">✗</span>'); }
+        else el.classList.add('dim');
+      });
+    }
+    const correctText = series ? (typed ? 'The answer is ' + q.value + '.' : 'The correct answer is ' + LETTERS[q.answer] + ': ' + q.value + '.') : 'The correct cube is ' + LETTERS[q.answer] + '.';
     const fb = $('#feedback');
-    if (chosen == null) { fb.textContent = 'Not answered. The correct cube is ' + LETTERS[q.answer] + '.'; fb.className = 'feedback bad'; }
-    else if (chosen === q.answer) { fb.textContent = 'Correct'; fb.className = 'feedback good'; }
-    else { fb.textContent = 'Not quite. The correct cube is ' + LETTERS[q.answer] + '.'; fb.className = 'feedback bad'; }
+    if (chosen == null) { fb.textContent = 'Not answered. ' + correctText; fb.className = 'feedback bad'; }
+    else if (right) { fb.textContent = 'Correct'; fb.className = 'feedback good'; }
+    else { fb.textContent = 'Not quite. ' + correctText; fb.className = 'feedback bad'; }
+    if (series) { $('#explain').textContent = q.explain; $('#explain').hidden = false; }
   }
 
-  function answer(i) {
+  function answer(pick) {
     if (S.locked || S.review) return;
     S.locked = true;
     const q = S.qs[S.idx];
-    S.picks[S.idx] = i;
+    S.picks[S.idx] = pick;
     if (S.mode === 'practice') {
-      const d = lv(S.level);
-      d.answered++; if (i === q.answer) d.correct++;
+      const d = lv(S.module, S.level);
+      d.answered++; if (isRight(q, pick)) d.correct++;
       saveStats(stats);
-      reveal(i);
+      reveal(pick);
       $('#btnNext').hidden = false;
       $('#btnNext').textContent = 'Next';
       $('#btnNext').focus({ preventScroll: true });
     } else {
-      document.querySelectorAll('.opt')[i].classList.add('chosen');
+      if (typeof pick === 'number') document.querySelectorAll('.opt')[pick].classList.add('chosen');
       setTimeout(() => {
-        if (S.idx + 1 >= TIMED_N) finishTimed(); else { S.idx++; draw(); }
-      }, 220);
+        if (S.idx + 1 >= cfg().n) finishTimed(); else { S.idx++; draw(); }
+      }, 200);
     }
   }
 
+  function submitTyped() {
+    const raw = $('#typedInput').value.trim().replace(/−/g, '-');
+    if (!/^-?\d+$/.test(raw)) { $('#typedInput').focus(); return; }
+    answer({ typed: Number(raw) });
+  }
+
   function next() {
-    if (S.review) { if (S.idx + 1 < TIMED_N) { S.idx++; draw(); } return; }
-    if (S.mode === 'practice') { S.qs.push(E.makeQuestion(S.level)); S.idx++; draw(); }
+    if (S.review) { if (S.idx + 1 < cfg().n) { S.idx++; draw(); } return; }
+    if (S.mode === 'practice') { S.qs.push(makeQ()); S.idx++; draw(); }
   }
 
   function showReviewNav() {
     $('#btnPrev').hidden = false;
     $('#btnPrev').textContent = S.idx === 0 ? 'Results' : 'Previous';
     $('#btnNext').hidden = false;
-    $('#btnNext').textContent = S.idx + 1 >= TIMED_N ? 'Results' : 'Next';
+    $('#btnNext').textContent = S.idx + 1 >= cfg().n ? 'Results' : 'Next';
   }
 
   function finishTimed() {
-    if (S.mode !== 'timed' || S.review) return;
+    if (S.mode !== 'timed' || S.review || S.result && S.result.final) return;
     clearInterval(S.timer);
     const secs = Math.round((Date.now() - S.startedAt) / 1000);
     let score = 0;
-    S.qs.forEach((q, i) => { if (S.picks[i] === q.answer) score++; });
-    const d = lv(S.level);
+    S.qs.forEach((q, i) => { if (isRight(q, S.picks[i])) score++; });
+    const d = lv(S.module, S.level);
     const answered = S.picks.filter((p) => p != null).length;
     d.answered += answered;
     d.correct += score;
     if (d.best == null || score > d.best) d.best = score;
     saveStats(stats);
-    S.result = { score, secs, answered };
+    S.result = { score, secs, answered, final: true };
     renderResults();
   }
 
   function renderResults() {
     const r = S.result;
-    $('#resTitle').textContent = 'Timed test · ' + S.level;
-    $('#resScore').textContent = r.score + ' / ' + TIMED_N;
+    const n = cfg().n;
+    $('#resTitle').textContent = (S.module === 'cubes' ? 'Cubes' : 'Number series') + ' · timed test · ' + S.level;
+    $('#resScore').textContent = r.score + ' / ' + n;
     const m = Math.floor(r.secs / 60), s = r.secs % 60;
-    $('#resMeta').textContent = 'Time ' + m + ':' + String(s).padStart(2, '0') + ' of 5:00' + (r.answered < TIMED_N ? ' · ' + (TIMED_N - r.answered) + ' unanswered' : '') + '.';
+    $('#resMeta').textContent = 'Time ' + m + ':' + String(s).padStart(2, '0') + ' of ' + cfg().secs / 60 + ':00' + (r.answered < n ? ' · ' + (n - r.answered) + ' unanswered' : '') + '.';
     $('#chips').innerHTML = S.qs.map((q, i) => {
       const p = S.picks[i];
-      const cls = p == null ? 'skip' : p === q.answer ? 'ok' : 'no';
+      const cls = p == null ? 'skip' : isRight(q, p) ? 'ok' : 'no';
       return '<button class="chip ' + cls + '" data-i="' + i + '" aria-label="Question ' + (i + 1) + (cls === 'ok' ? ' correct' : cls === 'no' ? ' wrong' : ' unanswered') + '">' + (i + 1) + '</button>';
     }).join('');
     S.review = false;
@@ -337,21 +461,24 @@
   function quit() {
     clearInterval(S.timer);
     S.review = false;
+    S.result = null;
     renderHome();
   }
 
   // ---------- events ----------
-  document.querySelectorAll('#levelSeg button').forEach((b) => b.addEventListener('click', () => {
-    S.level = b.dataset.level; stats.level = S.level; saveStats(stats); renderHome();
-  }));
+  const persist = () => { stats.module = S.module; stats.level = S.level; stats.entry = S.entry; saveStats(stats); };
+  document.querySelectorAll('#moduleSeg button').forEach((b) => b.addEventListener('click', () => { S.module = b.dataset.module; persist(); renderHome(); }));
+  document.querySelectorAll('#levelSeg button').forEach((b) => b.addEventListener('click', () => { S.level = b.dataset.level; persist(); renderHome(); }));
+  document.querySelectorAll('#entrySeg button').forEach((b) => b.addEventListener('click', () => { S.entry = b.dataset.entry; persist(); renderHome(); }));
   $('#btnTimed').addEventListener('click', () => start('timed'));
   $('#btnPractice').addEventListener('click', () => start('practice'));
   $('#btnQuit').addEventListener('click', () => { if (S.review) renderResults(); else quit(); });
   $('#btnAgain').addEventListener('click', () => start('timed'));
   $('#btnHome').addEventListener('click', quit);
   $('#options').addEventListener('click', (e) => { const b = e.target.closest('.opt'); if (b) answer(+b.dataset.i); });
+  $('#typed').addEventListener('submit', (e) => { e.preventDefault(); submitTyped(); });
   $('#btnNext').addEventListener('click', () => {
-    if (S.review && S.idx + 1 >= TIMED_N) return renderResults();
+    if (S.review && S.idx + 1 >= cfg().n) return renderResults();
     next();
   });
   $('#btnPrev').addEventListener('click', () => {
@@ -362,9 +489,11 @@
     S.review = true; S.idx = +b.dataset.i; draw(); show('quiz');
   });
   document.addEventListener('keydown', (e) => {
-    if ($('#quiz').hidden) return;
+    if ($('#quiz').hidden || e.target.tagName === 'INPUT' || e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key.toLowerCase();
-    if (LETTERS.includes(k) && k.length === 1) answer(LETTERS.indexOf(k));
+    const q = S.qs[S.idx];
+    const typed = q && isSeries(q) && q.entry === 'type';
+    if (!typed && k.length === 1 && LETTERS.includes(k) && LETTERS.indexOf(k) < q.options.length) answer(LETTERS.indexOf(k));
     else if ((k === 'enter' || k === 'arrowright') && !$('#btnNext').hidden) $('#btnNext').click();
     else if (k === 'arrowleft' && !$('#btnPrev').hidden) $('#btnPrev').click();
   });
