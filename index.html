@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101114">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Cube Trainer">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Cube Trainer</title>
+<style>
+  :root {
+    --bg: #f3f1ec; --fg: #1c1c1e; --muted: #6b6a66; --card: #fffdf8; --line: #dcd8cf;
+    --accent: #2f5bea; --accent-fg: #fff; --good: #1f9d57; --bad: #d6403a;
+    --paper: #fbfaf6; --ink: #1d1d1f; --f-top: #ffffff; --f-front: #f6f5f0; --f-right: #e4e2da;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #101114; --fg: #f1f0ec; --muted: #9b9a95; --card: #1a1c20; --line: #2b2e34;
+            --accent: #7b98ff; --accent-fg: #0d1220; --good: #3ecf86; --bad: #ff6b63; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--fg); min-height: 100dvh;
+         font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+         -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+  main { max-width: 560px; margin: 0 auto;
+         padding: max(18px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom)); }
+  [hidden] { display: none !important; }
+  h1 { font-size: 30px; line-height: 1.1; margin: 8px 0 6px; letter-spacing: -0.02em; }
+  h2 { font-size: 18px; margin: 0 0 8px; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* home */
+  .hero { display: flex; gap: 14px; align-items: center; margin-bottom: 18px; }
+  .hero .cube { width: 92px; flex: none; background: var(--paper); border-radius: 18px; padding: 8px; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--card); border: 1px solid var(--line);
+         border-radius: 14px; padding: 4px; gap: 4px; margin: 8px 0 6px; }
+  .seg button { border: 0; background: transparent; padding: 11px 6px; border-radius: 10px; font-weight: 600; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+  .lvl-desc { min-height: 2.9em; font-size: 14px; }
+  .primary, .secondary { display: block; width: 100%; border-radius: 14px; padding: 15px 16px; font-weight: 650; font-size: 17px; margin-top: 10px; }
+  .primary { background: var(--accent); color: var(--accent-fg); border: 0; }
+  .secondary { background: var(--card); border: 1px solid var(--line); }
+  .secondary small, .primary small { display: block; font-weight: 400; opacity: .8; font-size: 13px; }
+  .stats { margin-top: 22px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px 14px; }
+  .stats div { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .stats div:last-child { border-bottom: 0; }
+  details { margin-top: 18px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+  summary { font-weight: 600; cursor: pointer; }
+  details ul { margin: 10px 0 0; padding-left: 20px; }
+  details li { margin-bottom: 6px; }
+
+  /* quiz */
+  .bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .bar .back { border: 1px solid var(--line); background: var(--card); width: 40px; height: 40px; border-radius: 12px; font-size: 20px; line-height: 1; }
+  .bar .progress { flex: 1; font-weight: 600; }
+  .bar .timer { font-variant-numeric: tabular-nums; font-weight: 700; padding: 6px 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); }
+  .bar .timer.low { color: var(--bad); border-color: var(--bad); }
+  .sample { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 14px 18px 10px; margin: 0 auto 10px; width: min(68%, 280px); position: relative; }
+  .tag { position: absolute; left: 12px; top: 8px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #77756f; }
+  .prompt { text-align: center; color: var(--muted); font-size: 15px; margin: 4px 0 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .opt { position: relative; background: var(--paper); border: 3px solid var(--line); border-radius: 18px; padding: 22px 10px 10px; transition: transform .08s; }
+  .opt:active { transform: scale(.98); }
+  .opt .letter { position: absolute; left: 10px; top: 6px; font-weight: 700; color: #77756f; font-size: 15px; }
+  .opt.chosen { border-color: var(--accent); }
+  .opt.correct { border-color: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 28%, transparent); }
+  .opt.wrong { border-color: var(--bad); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 25%, transparent); }
+  .opt.dim { opacity: .55; }
+  .opt .mark { position: absolute; right: 10px; top: 4px; font-weight: 800; font-size: 18px; }
+  .opt.correct .mark { color: var(--good); }
+  .opt.wrong .mark { color: var(--bad); }
+  .cube { display: block; width: 100%; height: auto; }
+  .cube .face { stroke: var(--ink); stroke-width: 2.2; stroke-linejoin: round; }
+  .cube .s { fill: none; stroke: var(--ink); stroke-width: 2.4; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+  .cube .f { fill: var(--ink); stroke: none; }
+  .feedback { min-height: 28px; margin: 14px 0 0; text-align: center; font-weight: 650; }
+  .feedback.good { color: var(--good); } .feedback.bad { color: var(--bad); }
+  .row { display: flex; gap: 10px; } .row > * { flex: 1; }
+
+  /* results */
+  .score { font-size: 54px; font-weight: 750; letter-spacing: -0.03em; margin: 6px 0 0; }
+  .chips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 16px 0 6px; }
+  .chip { border: 2px solid var(--line); background: var(--card); border-radius: 12px; padding: 10px 0; font-weight: 700; }
+  .chip.ok { border-color: var(--good); color: var(--good); }
+  .chip.no { border-color: var(--bad); color: var(--bad); }
+  .chip.skip { color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .opt { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+
+  <!-- HOME -->
+  <section id="home">
+    <div class="hero">
+      <div id="heroCube"></div>
+      <div>
+        <h1>Cube Trainer</h1>
+        <div class="muted">Spatial reasoning: which cube is the sample, just turned?</div>
+      </div>
+    </div>
+
+    <h2>Level</h2>
+    <div class="seg" id="levelSeg" role="group" aria-label="Level">
+      <button data-level="easy">Easy</button>
+      <button data-level="medium">Medium</button>
+      <button data-level="hard">Hard</button>
+    </div>
+    <p class="muted lvl-desc" id="levelDesc"></p>
+
+    <button class="primary" id="btnTimed">Timed test<small>10 questions · 5 minutes · no feedback until the end</small></button>
+    <button class="secondary" id="btnPractice">Practice<small>endless, instant feedback after every answer</small></button>
+
+    <div class="stats" id="stats"></div>
+
+    <details>
+      <summary>How to solve these</summary>
+      <ul>
+        <li>All six faces of a cube are different, and every question is generated fresh, so you can’t memorise answers.</li>
+        <li>Find two faces that appear in both the sample and an option, then check which side of which face the other symbol sits.</li>
+        <li>Symbols without direction (circle, cross, dot) only tell you which face is which. Lines, diagonals and triangles also tell you how the face is turned.</li>
+        <li>Rule out options first: a wrong cube usually has two faces swapped, a symbol turned by 90°, or a face that can’t sit next to the others.</li>
+        <li>Opposite faces never appear together. If one option shows two faces that you know are opposite, it is wrong.</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" hidden>
+    <div class="bar">
+      <button class="back" id="btnQuit" aria-label="Back to menu">‹</button>
+      <div class="progress" id="progress"></div>
+      <div class="timer" id="timer" hidden></div>
+    </div>
+    <div class="sample"><span class="tag">Sample</span><div id="sampleCube"></div></div>
+    <div class="prompt">Which cube is the same one, turned?</div>
+    <div class="grid" id="options"></div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <div class="row" id="nav" style="margin-top:6px">
+      <button class="secondary" id="btnPrev" hidden>Previous</button>
+      <button class="primary" id="btnNext" hidden>Next</button>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" hidden>
+    <h2 id="resTitle">Result</h2>
+    <div class="score" id="resScore"></div>
+    <p class="muted" id="resMeta"></p>
+    <div class="chips" id="chips"></div>
+    <p class="muted" style="font-size:14px">Tap a number to review that question.</p>
+    <button class="primary" id="btnAgain">Another timed test</button>
+    <button class="secondary" id="btnHome">Back to menu</button>
+  </section>
+
+</main>
+
+<script src="engine.js"></script>
+<script>
+(function () {
+  'use strict';
+  const E = window.CubeEngine;
+  const $ = (s) => document.querySelector(s);
+  const LETTERS = 'abcd';
+  const TIMED_N = 10, TIMED_SECONDS = 300;
+  const KEY = 'cubetrainer.v1';
+  const DESC = {
+    easy: 'Mostly plain symbols. Wrong cubes tend to have the wrong faces next to each other.',
+    medium: 'Half of the faces have a direction. Wrong cubes may be a symbol turned by 90°.',
+    hard: 'Mostly turned symbols, and sometimes the answer shows none of the faces you saw in the sample.',
+  };
+
+  // ---------- storage (never required) ----------
+  function loadStats() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function saveStats(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
+  let stats = loadStats();
+  const lv = (l) => (stats[l] = stats[l] || { answered: 0, correct: 0, best: null });
+
+  // ---------- state ----------
+  const S = { level: stats.level || 'medium', mode: null, qs: [], idx: 0, picks: [], review: false, timer: null, deadline: 0, startedAt: 0, locked: false };
+
+  // ---------- screens ----------
+  function show(id) {
+    ['home', 'quiz', 'results'].forEach((s) => ($('#' + s).hidden = s !== id));
+    window.scrollTo(0, 0);
+  }
+
+  function renderHome() {
+    document.querySelectorAll('#levelSeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.level === S.level)));
+    $('#levelDesc').textContent = DESC[S.level];
+    $('#stats').innerHTML = ['easy', 'medium', 'hard'].map((l) => {
+      const d = lv(l);
+      const acc = d.answered ? Math.round((100 * d.correct) / d.answered) + '% of ' + d.answered : '–';
+      const best = d.best == null ? '' : ' · best test ' + d.best + '/' + TIMED_N;
+      return '<div><span>' + l[0].toUpperCase() + l.slice(1) + '</span><span class="muted">' + acc + best + '</span></div>';
+    }).join('');
+    const hero = E.makeQuestion('medium');
+    $('#heroCube').innerHTML = E.renderCube(hero.sample, { label: 'sample cube' });
+    $('#heroCube').className = 'hero-cube';
+    $('#heroCube').firstChild.style.cssText = 'width:92px;background:var(--paper);border-radius:18px;padding:8px';
+    show('home');
+  }
+
+  // ---------- quiz ----------
+  function start(mode) {
+    S.mode = mode;
+    S.idx = 0;
+    S.picks = [];
+    S.review = false;
+    S.qs = mode === 'timed' ? Array.from({ length: TIMED_N }, () => E.makeQuestion(S.level)) : [E.makeQuestion(S.level)];
+    clearInterval(S.timer);
+    if (mode === 'timed') {
+      S.startedAt = Date.now();
+      S.deadline = S.startedAt + TIMED_SECONDS * 1000;
+      S.timer = setInterval(tick, 250);
+      tick();
+    }
+    $('#timer').hidden = mode !== 'timed';
+    draw();
+    show('quiz');
+  }
+
+  function tick() {
+    const left = Math.max(0, Math.round((S.deadline - Date.now()) / 1000));
+    const t = $('#timer');
+    t.textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+    t.classList.toggle('low', left <= 30);
+    if (left <= 0) finishTimed();
+  }
+
+  function draw() {
+    const q = S.qs[S.idx];
+    S.locked = false;
+    $('#sampleCube').innerHTML = E.renderCube(q.sample, { label: 'sample cube' });
+    $('#options').innerHTML = q.options.map((o, i) =>
+      '<button class="opt" data-i="' + i + '" aria-label="Option ' + LETTERS[i] + '"><span class="letter">' + LETTERS[i] + '</span>' + E.renderCube(o.state, { label: 'option ' + LETTERS[i] }) + '</button>'
+    ).join('');
+    const total = S.mode === 'timed' ? TIMED_N : null;
+    $('#progress').textContent = S.review ? 'Review · question ' + (S.idx + 1) + '/' + TIMED_N
+      : S.mode === 'timed' ? 'Question ' + (S.idx + 1) + '/' + TIMED_N
+      : 'Practice · #' + (S.idx + 1) + ' · ' + S.level;
+    $('#feedback').textContent = '';
+    $('#feedback').className = 'feedback';
+    $('#btnNext').hidden = true;
+    $('#btnPrev').hidden = true;
+    if (S.review) { reveal(S.picks[S.idx]); showReviewNav(); }
+    else if (S.mode === 'practice' && S.picks[S.idx] != null) reveal(S.picks[S.idx]);
+    void total;
+  }
+
+  function reveal(chosen) {
+    const q = S.qs[S.idx];
+    document.querySelectorAll('.opt').forEach((el, i) => {
+      el.classList.remove('chosen');
+      if (i === q.answer) { el.classList.add('correct'); el.insertAdjacentHTML('beforeend', '<span class="mark">✓</span>'); }
+      else if (i === chosen) { el.classList.add('wrong'); el.insertAdjacentHTML('beforeend', '<span class="mark">✗</span>'); }
+      else el.classList.add('dim');
+    });
+    const fb = $('#feedback');
+    if (chosen == null) { fb.textContent = 'Not answered. The correct cube is ' + LETTERS[q.answer] + '.'; fb.className = 'feedback bad'; }
+    else if (chosen === q.answer) { fb.textContent = 'Correct'; fb.className = 'feedback good'; }
+    else { fb.textContent = 'Not quite. The correct cube is ' + LETTERS[q.answer] + '.'; fb.className = 'feedback bad'; }
+  }
+
+  function answer(i) {
+    if (S.locked || S.review) return;
+    S.locked = true;
+    const q = S.qs[S.idx];
+    S.picks[S.idx] = i;
+    if (S.mode === 'practice') {
+      const d = lv(S.level);
+      d.answered++; if (i === q.answer) d.correct++;
+      saveStats(stats);
+      reveal(i);
+      $('#btnNext').hidden = false;
+      $('#btnNext').textContent = 'Next';
+      $('#btnNext').focus({ preventScroll: true });
+    } else {
+      document.querySelectorAll('.opt')[i].classList.add('chosen');
+      setTimeout(() => {
+        if (S.idx + 1 >= TIMED_N) finishTimed(); else { S.idx++; draw(); }
+      }, 220);
+    }
+  }
+
+  function next() {
+    if (S.review) { if (S.idx + 1 < TIMED_N) { S.idx++; draw(); } return; }
+    if (S.mode === 'practice') { S.qs.push(E.makeQuestion(S.level)); S.idx++; draw(); }
+  }
+
+  function showReviewNav() {
+    $('#btnPrev').hidden = false;
+    $('#btnPrev').textContent = S.idx === 0 ? 'Results' : 'Previous';
+    $('#btnNext').hidden = false;
+    $('#btnNext').textContent = S.idx + 1 >= TIMED_N ? 'Results' : 'Next';
+  }
+
+  function finishTimed() {
+    if (S.mode !== 'timed' || S.review) return;
+    clearInterval(S.timer);
+    const secs = Math.round((Date.now() - S.startedAt) / 1000);
+    let score = 0;
+    S.qs.forEach((q, i) => { if (S.picks[i] === q.answer) score++; });
+    const d = lv(S.level);
+    const answered = S.picks.filter((p) => p != null).length;
+    d.answered += answered;
+    d.correct += score;
+    if (d.best == null || score > d.best) d.best = score;
+    saveStats(stats);
+    S.result = { score, secs, answered };
+    renderResults();
+  }
+
+  function renderResults() {
+    const r = S.result;
+    $('#resTitle').textContent = 'Timed test · ' + S.level;
+    $('#resScore').textContent = r.score + ' / ' + TIMED_N;
+    const m = Math.floor(r.secs / 60), s = r.secs % 60;
+    $('#resMeta').textContent = 'Time ' + m + ':' + String(s).padStart(2, '0') + ' of 5:00' + (r.answered < TIMED_N ? ' · ' + (TIMED_N - r.answered) + ' unanswered' : '') + '.';
+    $('#chips').innerHTML = S.qs.map((q, i) => {
+      const p = S.picks[i];
+      const cls = p == null ? 'skip' : p === q.answer ? 'ok' : 'no';
+      return '<button class="chip ' + cls + '" data-i="' + i + '" aria-label="Question ' + (i + 1) + (cls === 'ok' ? ' correct' : cls === 'no' ? ' wrong' : ' unanswered') + '">' + (i + 1) + '</button>';
+    }).join('');
+    S.review = false;
+    show('results');
+  }
+
+  function quit() {
+    clearInterval(S.timer);
+    S.review = false;
+    renderHome();
+  }
+
+  // ---------- events ----------
+  document.querySelectorAll('#levelSeg button').forEach((b) => b.addEventListener('click', () => {
+    S.level = b.dataset.level; stats.level = S.level; saveStats(stats); renderHome();
+  }));
+  $('#btnTimed').addEventListener('click', () => start('timed'));
+  $('#btnPractice').addEventListener('click', () => start('practice'));
+  $('#btnQuit').addEventListener('click', () => { if (S.review) renderResults(); else quit(); });
+  $('#btnAgain').addEventListener('click', () => start('timed'));
+  $('#btnHome').addEventListener('click', quit);
+  $('#options').addEventListener('click', (e) => { const b = e.target.closest('.opt'); if (b) answer(+b.dataset.i); });
+  $('#btnNext').addEventListener('click', () => {
+    if (S.review && S.idx + 1 >= TIMED_N) return renderResults();
+    next();
+  });
+  $('#btnPrev').addEventListener('click', () => {
+    if (S.review) { if (S.idx === 0) renderResults(); else { S.idx--; draw(); } }
+  });
+  $('#chips').addEventListener('click', (e) => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    S.review = true; S.idx = +b.dataset.i; draw(); show('quiz');
+  });
+  document.addEventListener('keydown', (e) => {
+    if ($('#quiz').hidden) return;
+    const k = e.key.toLowerCase();
+    if (LETTERS.includes(k) && k.length === 1) answer(LETTERS.indexOf(k));
+    else if ((k === 'enter' || k === 'arrowright') && !$('#btnNext').hidden) $('#btnNext').click();
+    else if (k === 'arrowleft' && !$('#btnPrev').hidden) $('#btnPrev').click();
+  });
+
+  renderHome();
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
