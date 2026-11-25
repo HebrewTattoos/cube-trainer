@@ -126,6 +126,22 @@
   }
   const visibleIds = (state) => VIEW.map((vp) => faceAt(state, vp.n).id);
 
+  // What a solver can know from the sample alone: the three faces seen are known, the three hidden faces
+  // are unknown symbols (anything except the three seen). A view is only "possible" if some turn fits that.
+  function faceSig(face, vp) {
+    return face.sym + ':' + (quarterTurns(face, vp) % SYMBOLS[face.sym].order);
+  }
+  function possibleFromSample(S, V) {
+    const known = new Set(visibleIds(S));
+    const knownSyms = new Set(VIEW.map((vp) => faceAt(S, vp.n).sym));
+    return ROTS.some((R) => VIEW.every((vp) => {
+      const vf = faceAt(V, vp.n);
+      const f = S.find((g) => eq(mul(R, g.n), vp.n));
+      if (known.has(f.id)) return faceSig({ sym: f.sym, w: mul(R, f.w) }, vp) === faceSig(vf, vp);
+      return !knownSyms.has(vf.sym);
+    }));
+  }
+
   function pickSymbols(level, rng) {
     const k = LEVELS[level].oriented;
     const o = shuffle(ORIENTED.slice(), rng).slice(0, k);
@@ -171,7 +187,6 @@
       const S = randomCube(pickSymbols(level, rng), rng);
       const sampleSig = signature(S);
       const rotated = ROTS.map((R) => rotate(S, R));
-      const possible = new Set(rotated.map(signature));
       const sampleIds = visibleIds(S);
 
       const wantShared = weighted(LEVELS[level].shared, rng);
@@ -188,7 +203,8 @@
         const B = mutate(A, level, rng);
         if (!B) continue;
         const sg = signature(B);
-        if (possible.has(sg) || taken.has(sg)) continue;
+        // a wrong option must contradict the sample itself, not just the hidden faces
+        if (possibleFromSample(S, B) || taken.has(sg)) continue;
         taken.add(sg);
         wrong.push(B);
       }
@@ -204,12 +220,14 @@
   function verifyQuestion(q) {
     const possible = new Set(ROTS.map((R) => signature(rotate(q.sample, R))));
     const sigs = q.options.map((o) => signature(o.state));
-    const ok = sigs.filter((s) => possible.has(s));
     const syms = (st) => VIEW.map((vp) => faceAt(st, vp.n).sym);
+    const fromSample = q.options.map((o) => possibleFromSample(q.sample, o.state));
     return (
       q.options.length === 4 &&
       new Set(sigs).size === 4 &&
-      ok.length === 1 &&
+      // sample alone decides: exactly one option fits, it is the keyed one and a true turn of the cube
+      fromSample.filter(Boolean).length === 1 &&
+      fromSample[q.answer] &&
       possible.has(sigs[q.answer]) &&
       [q.sample].concat(q.options.map((o) => o.state)).every((st) => new Set(syms(st)).size === 3)
     );

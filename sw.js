@@ -1,5 +1,5 @@
 // Offline cache: serve from cache, refresh in the background (bump CACHE to force a clean slate).
-const CACHE = 'cube-trainer-v1';
+const CACHE = 'cube-trainer-v2';
 const ASSETS = ['./', 'index.html', 'engine.js', 'manifest.webmanifest', 'icon.svg', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
