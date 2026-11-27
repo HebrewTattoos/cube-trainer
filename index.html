@@ -15,13 +15,13 @@
 <style>
   :root {
     --bg: #f3f1ec; --fg: #1c1c1e; --muted: #6b6a66; --card: #fffdf8; --line: #dcd8cf;
-    --accent: #2f5bea; --accent-fg: #fff; --good: #1f9d57; --bad: #d6403a;
-    --paper: #fbfaf6; --ink: #1d1d1f; --f-top: #ffffff; --f-front: #f6f5f0; --f-right: #e4e2da;
+    --accent: #2f5bea; --accent-fg: #fff; --good: #1f9d57; --bad: #d6403a; --warn: #b9770e;
+    --paper: #fbfaf6; --ink: #1d1d1f; --soft: #c9c6bd; --f-top: #ffffff; --f-front: #f6f5f0; --f-right: #e4e2da;
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark) {
     :root { --bg: #101114; --fg: #f1f0ec; --muted: #9b9a95; --card: #1a1c20; --line: #2b2e34;
-            --accent: #7b98ff; --accent-fg: #0d1220; --good: #3ecf86; --bad: #ff6b63; }
+            --accent: #7b98ff; --accent-fg: #0d1220; --good: #3ecf86; --bad: #ff6b63; --warn: #e0a23a; }
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
@@ -31,87 +31,143 @@
   main { max-width: 560px; margin: 0 auto;
          padding: max(18px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom)); }
   [hidden] { display: none !important; }
-  h1 { font-size: 30px; line-height: 1.1; margin: 8px 0 6px; letter-spacing: -0.02em; }
+  h1 { font-size: 28px; line-height: 1.1; margin: 4px 0 14px; letter-spacing: -0.02em; }
   h2 { font-size: 18px; margin: 0 0 8px; }
+  h3 { font-size: 15px; margin: 0 0 6px; }
   p { margin: 0 0 12px; }
   .muted { color: var(--muted); }
-  button { font: inherit; color: inherit; cursor: pointer; }
-  button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .small { font-size: 13px; }
+  button, select { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .primary, .secondary { display: block; width: 100%; border-radius: 14px; padding: 14px 16px; font-weight: 650; font-size: 17px; margin-top: 10px; text-align: center; }
+  .primary { background: var(--accent); color: var(--accent-fg); border: 0; }
+  .secondary { background: var(--card); border: 1px solid var(--line); }
+  .primary small, .secondary small { display: block; font-weight: 400; opacity: .8; font-size: 13px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+
+  /* top bar */
+  .bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .bar .back { border: 1px solid var(--line); background: var(--card); width: 40px; height: 40px; border-radius: 12px; font-size: 20px; line-height: 1; flex: none; }
+  .bar .progress { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar .timer { font-variant-numeric: tabular-nums; font-weight: 700; padding: 6px 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); }
+  .bar .timer.low { color: var(--bad); border-color: var(--bad); }
 
   /* home */
-  .hero { display: flex; gap: 14px; align-items: center; margin-bottom: 18px; }
-  .heroArt { flex: none; width: 92px; height: 92px; background: var(--paper); border-radius: 18px; padding: 8px; display: grid; place-items: center; }
-  .heroArt .cube { width: 100%; }
-  .heroArt .heroTerms { font-weight: 800; font-size: 17px; line-height: 1.15; text-align: center; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .heroArt .heroTerms b { color: var(--accent); }
-  .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--card); border: 1px solid var(--line);
-         border-radius: 14px; padding: 4px; gap: 4px; margin: 8px 0 6px; }
+  .profileCard { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+  .pc-score { flex: none; width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; font-weight: 800; border: 4px solid var(--line); font-variant-numeric: tabular-nums; }
+  .pc-score.s-lo { border-color: var(--bad); } .pc-score.s-mid { border-color: var(--warn); } .pc-score.s-hi { border-color: var(--good); }
+  .pc-text { flex: 1; min-width: 0; } .pc-text b { display: block; } .pc-chev { font-size: 22px; color: var(--muted); }
+  .domain { margin-top: 22px; }
+  .domain h2 { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .domain h2 .muted { font-size: 13px; font-weight: 400; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile { position: relative; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 40px 12px 12px; min-height: 64px; min-width: 0; }
+  .tile .tname { display: block; font-weight: 650; line-height: 1.2; }
+  .tile .tde { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; overflow-wrap: anywhere; }
+  .pill { position: absolute; right: 8px; top: 8px; min-width: 28px; text-align: center; font-size: 12px; font-weight: 800; padding: 2px 6px; border-radius: 999px; border: 2px solid var(--line); font-variant-numeric: tabular-nums; }
+  .pill.s-lo { border-color: var(--bad); color: var(--bad); } .pill.s-mid { border-color: var(--warn); color: var(--warn); } .pill.s-hi { border-color: var(--good); color: var(--good); }
+  .pill.none { color: var(--muted); }
+
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px; gap: 4px; margin: 8px 0 6px; }
   .seg.two { grid-template-columns: repeat(2, 1fr); }
   .seg button { border: 0; background: transparent; padding: 11px 6px; border-radius: 10px; font-weight: 600; }
   .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
   .lvl-desc { min-height: 2.9em; font-size: 14px; }
-  .primary, .secondary { display: block; width: 100%; border-radius: 14px; padding: 15px 16px; font-weight: 650; font-size: 17px; margin-top: 10px; }
-  .primary { background: var(--accent); color: var(--accent-fg); border: 0; }
-  .secondary { background: var(--card); border: 1px solid var(--line); }
-  .secondary small, .primary small { display: block; font-weight: 400; opacity: .8; font-size: 13px; }
-  .stats { margin-top: 22px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px 14px; }
+  .stats { margin-top: 18px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px 14px; }
   .stats div { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
   .stats div:last-child { border-bottom: 0; }
-  details { margin-top: 18px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+  details { margin-top: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
   summary { font-weight: 600; cursor: pointer; }
-  details ul { margin: 10px 0 0; padding-left: 20px; }
-  details li { margin-bottom: 6px; }
+  details ul { margin: 10px 0 0; padding-left: 20px; } details li { margin-bottom: 6px; }
 
   /* quiz */
-  .bar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-  .bar .back { border: 1px solid var(--line); background: var(--card); width: 40px; height: 40px; border-radius: 12px; font-size: 20px; line-height: 1; }
-  .bar .progress { flex: 1; font-weight: 600; }
-  .bar .timer { font-variant-numeric: tabular-nums; font-weight: 700; padding: 6px 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); }
-  .bar .timer.low { color: var(--bad); border-color: var(--bad); }
-  .sample { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 14px 18px 10px; margin: 0 auto 10px; width: min(68%, 280px); position: relative; }
-  .tag { position: absolute; left: 12px; top: 8px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #77756f; }
-  .seriesCard { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 32px 14px 24px; margin: 0 auto 10px; position: relative; }
-  .seriesCard .tag { color: var(--muted); }
-  .terms { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 16px; font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
-  .term.q { color: var(--accent); border-bottom: 3px solid var(--accent); min-width: 1.3em; text-align: center; }
+  .stim { border-radius: 20px; padding: 30px 14px 12px; margin: 0 auto 10px; position: relative; background: var(--card); border: 1px solid var(--line); overflow-x: auto; }
+  .stim.paper { background: var(--paper); color: var(--ink); max-width: 440px; }
+  .stim .tag, .studyCard .tag { position: absolute; left: 14px; top: 9px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .stim.paper .tag { color: #77756f; }
+  .stim.nosticky { padding-top: 14px; }
+  .studyCard { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 34px 14px 18px; margin-bottom: 10px; }
+  .timebar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 14px; }
+  .timebar i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left; }
   .prompt { text-align: center; color: var(--muted); font-size: 15px; margin: 4px 0 12px; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .grid.five .opt:last-child { grid-column: 1 / -1; }
-  .opt { position: relative; background: var(--paper); border: 3px solid var(--line); border-radius: 18px; padding: 22px 10px 10px; transition: transform .08s; }
+  .grid.list { grid-template-columns: 1fr; gap: 10px; }
+  .grid.odd > .opt:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .opt { position: relative; background: var(--card); border: 3px solid var(--line); border-radius: 18px; padding: 22px 10px 14px; transition: transform .08s; min-width: 0; color: var(--fg); }
   .opt:active { transform: scale(.98); }
-  .opt .letter { position: absolute; left: 10px; top: 6px; font-weight: 700; color: #77756f; font-size: 15px; }
-  .opt.num { background: var(--card); padding: 22px 10px 14px; text-align: center; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--fg); }
-  .opt.num .letter { color: var(--muted); }
+  .opt .letter { position: absolute; left: 10px; top: 6px; font-weight: 700; color: var(--muted); font-size: 15px; }
+  .opt.figure { background: var(--paper); color: var(--ink); padding: 22px 10px 10px; }
+  .opt.figure .letter { color: #77756f; }
+  .opt.grid-opt { text-align: center; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  .opt.grid-opt.wordy { font-size: 18px; font-weight: 650; }
+  .opt.text { text-align: left; padding: 12px 14px 12px 42px; font-size: 16px; }
+  .opt.text .letter { top: 11px; left: 14px; }
   .opt.chosen { border-color: var(--accent); }
   .opt.correct { border-color: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 28%, transparent); }
   .opt.wrong { border-color: var(--bad); box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 25%, transparent); }
   .opt.dim { opacity: .55; }
   .opt .mark { position: absolute; right: 10px; top: 4px; font-weight: 800; font-size: 18px; }
-  .opt.correct .mark { color: var(--good); }
-  .opt.wrong .mark { color: var(--bad); }
+  .opt.correct .mark { color: var(--good); } .opt.wrong .mark { color: var(--bad); }
   .typed { display: flex; gap: 10px; margin-top: 6px; }
-  .typed input { flex: 1; min-width: 0; font: inherit; font-size: 28px; font-weight: 700; text-align: center; padding: 12px; border-radius: 14px;
-                 border: 3px solid var(--line); background: var(--card); color: var(--fg); font-variant-numeric: tabular-nums; }
-  .typed input.correct { border-color: var(--good); }
-  .typed input.wrong { border-color: var(--bad); }
+  .typed input { flex: 1; min-width: 0; font: inherit; font-size: 28px; font-weight: 700; text-align: center; padding: 12px; border-radius: 14px; border: 3px solid var(--line); background: var(--card); color: var(--fg); font-variant-numeric: tabular-nums; }
+  .typed input.correct { border-color: var(--good); } .typed input.wrong { border-color: var(--bad); }
   .typed .primary { width: auto; margin: 0; padding: 0 24px; }
-  .cube { display: block; width: 100%; height: auto; }
-  .cube .face { stroke: var(--ink); stroke-width: 2.2; stroke-linejoin: round; }
-  .cube .s { fill: none; stroke: var(--ink); stroke-width: 2.4; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
-  .cube .f { fill: var(--ink); stroke: none; }
   .feedback { min-height: 28px; margin: 14px 0 0; text-align: center; font-weight: 650; }
   .feedback.good { color: var(--good); } .feedback.bad { color: var(--bad); }
   .explain { margin: 8px 0 0; padding: 12px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; font-size: 15px; }
   .row { display: flex; gap: 10px; } .row > * { flex: 1; }
 
+  /* drawings and content shared with task modules */
+  .fig, .cube { display: block; width: 100%; height: auto; margin: 0 auto; }
+  .stim .fig, .stim .cube { max-width: 380px; }
+  .cube .face { stroke: var(--ink); stroke-width: 2.2; stroke-linejoin: round; }
+  .cube .s, .fig .s { fill: none; stroke: var(--ink); stroke-width: 2.4; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+  .cube .f, .fig .f { fill: var(--ink); stroke: none; }
+  .terms { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 16px; font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .term.q { color: var(--accent); border-bottom: 3px solid var(--accent); min-width: 1.3em; text-align: center; }
+  .words { margin: 0; padding-left: 0; list-style: none; columns: 2; column-gap: 24px; counter-reset: w; font-size: 21px; font-weight: 650; }
+  .words li { counter-increment: w; break-inside: avoid; padding: 3px 0; }
+  .words li::before { content: counter(w) "."; color: var(--muted); font-weight: 500; font-size: 14px; display: inline-block; width: 1.8em; }
+  .digits { font: 700 34px ui-monospace, Menlo, monospace; letter-spacing: .12em; text-align: center; padding: 14px 0; overflow-wrap: anywhere; }
+  .pair { display: grid; gap: 8px; } .mono { font: 700 22px ui-monospace, Menlo, monospace; letter-spacing: .1em; text-align: center; overflow-wrap: anywhere; }
+  .nm { border-collapse: collapse; margin: 0 auto; }
+  .nm td { border: 2px solid var(--line); width: 64px; height: 52px; text-align: center; font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .nm td.q { color: var(--accent); }
+  .dt { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .dt th, .dt td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; } .dt th:first-child, .dt td:first-child { text-align: left; }
+  .big { font-size: 28px; font-weight: 700; text-align: center; padding: 6px 0; overflow-wrap: anywhere; }
+
   /* results */
   .score { font-size: 54px; font-weight: 750; letter-spacing: -0.03em; margin: 6px 0 0; }
   .chips { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 16px 0 6px; }
   .chip { border: 2px solid var(--line); background: var(--card); border-radius: 12px; padding: 10px 0; font-weight: 700; }
-  .chip.ok { border-color: var(--good); color: var(--good); }
-  .chip.no { border-color: var(--bad); color: var(--bad); }
-  .chip.skip { color: var(--muted); }
+  .chip.ok { border-color: var(--good); color: var(--good); } .chip.no { border-color: var(--bad); color: var(--bad); } .chip.skip { color: var(--muted); }
+
+  /* profile */
+  .overall { display: flex; gap: 16px; align-items: center; }
+  .overall .big-score { font-size: 64px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .overall .meta { min-width: 0; }
+  .band { font-weight: 700; font-size: 18px; }
+  .pill-sel { width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); margin-top: 6px; }
+  .radar { display: block; width: 100%; max-width: 360px; height: auto; margin: 6px auto 0; }
+  .radar text { fill: var(--muted); font: 600 11px -apple-system, system-ui, sans-serif; }
+  .focusItem { border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-top: 10px; background: var(--card); }
+  .focusItem .top { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; }
+  .focusItem .rank { font-weight: 800; color: var(--accent); margin-right: 6px; }
+  .gain { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--good); white-space: nowrap; font-size: 14px; }
+  .focusItem .btn { margin-top: 10px; display: inline-block; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 8px 14px; font-weight: 650; }
+  .mrow { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 4px 10px; padding: 8px 0; border-bottom: 1px solid var(--line); align-items: center; }
+  .mrow:last-child { border-bottom: 0; }
+  .mrow .nm2 { font-size: 14px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+  .mrow .val { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .track { grid-column: 1 / -1; height: 8px; background: var(--line); border-radius: 4px; position: relative; overflow: hidden; }
+  .track .range { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--accent) 30%, transparent); }
+  .track .dot { position: absolute; top: 0; bottom: 0; width: 4px; background: var(--accent); transform: translateX(-2px); border-radius: 2px; }
+  .mrow .sub { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+  .chipRow { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chipRow span { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 13px; background: var(--card); }
+  .danger { color: var(--bad); border-color: var(--bad) !important; }
   @media (prefers-reduced-motion: reduce) { .opt { transition: none; } }
 </style>
 </head>
@@ -120,44 +176,36 @@
 
   <!-- HOME -->
   <section id="home">
-    <div class="hero">
-      <div class="heroArt" id="heroArt"></div>
-      <div>
-        <h1>Reasoning Trainer</h1>
-        <div class="muted" id="tagline"></div>
-      </div>
-    </div>
+    <h1>Reasoning Trainer</h1>
+    <button class="profileCard" id="btnProfile">
+      <div class="pc-score" id="pcScore">–</div>
+      <div class="pc-text"><b id="pcTitle">Your profile</b><span class="muted small" id="pcSub"></span></div>
+      <span class="pc-chev">›</span>
+    </button>
+    <button class="primary" id="btnSmart">Smart practice<small>picks exercises and levels where you gain most</small></button>
+    <button class="secondary" id="btnCheck">Quick check<small id="checkSub"></small></button>
+    <div id="domains"></div>
+  </section>
 
-    <div class="seg two" id="moduleSeg" role="group" aria-label="Exercise type">
-      <button data-module="cubes">Cubes</button>
-      <button data-module="series">Number series</button>
-    </div>
-
-    <h2 style="margin-top:14px">Level</h2>
+  <!-- EXERCISE -->
+  <section id="module" hidden>
+    <div class="bar"><button class="back" id="modBack" aria-label="Back">‹</button><div class="progress" id="modTitle"></div></div>
+    <p class="muted" id="modDe" lang="de"></p>
+    <h2>Level</h2>
     <div class="seg" id="levelSeg" role="group" aria-label="Level">
-      <button data-level="easy">Easy</button>
-      <button data-level="medium">Medium</button>
-      <button data-level="hard">Hard</button>
+      <button data-level="easy">Easy</button><button data-level="medium">Medium</button><button data-level="hard">Hard</button>
     </div>
     <p class="muted lvl-desc" id="levelDesc"></p>
-
     <div id="entryBox" hidden>
       <h2>Answer by</h2>
       <div class="seg two" id="entrySeg" role="group" aria-label="Answer mode">
-        <button data-entry="choose">Choosing</button>
-        <button data-entry="type">Typing</button>
+        <button data-entry="choose">Choosing</button><button data-entry="type">Typing</button>
       </div>
     </div>
-
     <button class="primary" id="btnTimed">Timed test<small id="timedSub"></small></button>
     <button class="secondary" id="btnPractice">Practice<small>endless, instant feedback after every answer</small></button>
-
-    <div class="stats" id="stats"></div>
-
-    <details>
-      <summary>How to solve these</summary>
-      <ul id="tips"></ul>
-    </details>
+    <div class="stats" id="modStats"></div>
+    <details><summary>How to solve these</summary><ul id="tips"></ul></details>
   </section>
 
   <!-- QUIZ -->
@@ -167,17 +215,22 @@
       <div class="progress" id="progress"></div>
       <div class="timer" id="timer" hidden></div>
     </div>
-    <div class="sample" id="cubeSample"><span class="tag">Sample</span><div id="sampleCube"></div></div>
-    <div class="seriesCard" id="seriesCard" hidden><span class="tag">Series</span><div class="terms" id="terms"></div></div>
-    <div class="prompt" id="prompt"></div>
-    <div class="grid" id="options"></div>
-    <form class="typed" id="typed" hidden>
-      <label class="sr" for="typedInput">Your answer</label>
-      <input id="typedInput" type="text" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="?">
-      <button class="primary" id="typedGo" type="submit">Check</button>
-    </form>
-    <div class="feedback" id="feedback" aria-live="polite"></div>
-    <div class="explain" id="explain" hidden></div>
+    <div id="studyBox" hidden>
+      <div class="studyCard"><span class="tag" id="studyLabel"></span><div id="studyBody"></div><div class="timebar"><i id="studyFill"></i></div></div>
+      <button class="primary" id="btnReady">I’m ready</button>
+    </div>
+    <div id="askBox">
+      <div class="stim" id="stim" hidden><span class="tag" id="stimTag"></span><div id="stimBody"></div></div>
+      <div class="prompt" id="prompt"></div>
+      <div class="grid" id="options"></div>
+      <form class="typed" id="typed" hidden>
+        <label class="sr" for="typedInput">Your answer</label>
+        <input id="typedInput" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="?">
+        <button class="primary" id="typedGo" type="submit">Check</button>
+      </form>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+      <div class="explain" id="explain" hidden></div>
+    </div>
     <div class="row" id="nav" style="margin-top:6px">
       <button class="secondary" id="btnPrev" hidden>Previous</button>
       <button class="primary" id="btnNext" hidden>Next</button>
@@ -190,129 +243,187 @@
     <div class="score" id="resScore"></div>
     <p class="muted" id="resMeta"></p>
     <div class="chips" id="chips"></div>
-    <p class="muted" style="font-size:14px">Tap a number to review that question.</p>
-    <button class="primary" id="btnAgain">Another timed test</button>
+    <p class="muted small">Tap a number to review that question.</p>
+    <button class="primary" id="btnResPrimary">Another timed test</button>
     <button class="secondary" id="btnHome">Back to menu</button>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="profile" hidden>
+    <div class="bar"><button class="back" id="profBack" aria-label="Back">‹</button><div class="progress">Your abilities</div></div>
+    <div id="profBody"></div>
   </section>
 
 </main>
 
+<script src="core.js"></script>
 <script src="engine.js"></script>
 <script src="series.js"></script>
+<script src="adapters.js"></script>
+<script src="mod-figural.js" onerror="void 0"></script>
+<script src="mod-numeric.js" onerror="void 0"></script>
+<script src="mod-verbal-data.js" onerror="void 0"></script>
+<script src="mod-verbal.js" onerror="void 0"></script>
+<script src="mod-memory.js"></script>
+<script src="profile.js"></script>
 <script>
 (function () {
   'use strict';
-  const CE = window.CubeEngine;
-  const SE = window.SeriesEngine;
+  const T = window.Trainer, P = window.Profile;
   const $ = (s) => document.querySelector(s);
-  const LETTERS = 'abcde';
-  const KEY = 'cubetrainer.v1';
-
-  const CFG = {
-    cubes: {
-      n: 10, secs: 300,
-      tagline: 'Spatial reasoning: which cube is the sample, just turned?',
-      prompt: 'Which cube is the same one, turned?',
-      desc: {
-        easy: 'Mostly plain symbols. Wrong cubes tend to have the wrong faces next to each other.',
-        medium: 'Half of the faces have a direction. Wrong cubes may be a symbol turned by 90°.',
-        hard: 'Mostly turned symbols, and sometimes the answer shows none of the faces you saw in the sample.',
-      },
-      tips: [
-        'All six faces of a cube are different, and every question is generated fresh, so you can’t memorise answers.',
-        'Find two faces that appear in both the sample and an option, then check which side of which face the other symbol sits.',
-        'Symbols without direction (circle, cross, dot) only tell you which face is which. Lines, diagonals and triangles also tell you how the face is turned.',
-        'Rule out options first: a wrong cube usually has two faces swapped, a symbol turned by 90°, or a face that can’t sit next to the others.',
-        'Opposite faces never appear together. If one option shows two faces that you know are opposite, it is wrong.',
-      ],
-    },
-    series: {
-      n: 10, secs: 360,
-      tagline: 'Number series (Zahlenreihen): which number comes next?',
-      prompt: 'Which number continues the series?',
-      desc: {
-        easy: 'Steady steps, multiplying or halving, steps that grow by one, square numbers.',
-        medium: 'Two series woven together, “×2 + 1” rules, sums of the two numbers before, steps that grow by 2 or 3.',
-        hard: 'Layered rules: add and double in turns, cubes, primes, steps that double, sums plus a constant.',
-      },
-      tips: [
-        'Write the gaps between neighbours first. Equal gaps mean a steady step; gaps that change by a fixed amount mean a growing step.',
-        'If the gaps look random, try ratios (÷ the previous number). Constant ratio means multiplying.',
-        'Numbers jumping up and down usually mean two series woven together. Look at every second number on its own.',
-        'Each number the sum of the two before it (1, 2, 3, 5, 8 …) shows up a lot. So do squares (1, 4, 9 …), cubes (1, 8, 27 …) and primes.',
-        'Every series here has exactly one answer that fits all rules a test would use. After each answer in practice you see the rule.',
-      ],
-    },
-  };
+  const esc = T.util.esc;
+  const LEVELS = ['easy', 'medium', 'hard'];
+  const LETTERS = 'abcdef';
+  const KEY = 'reasoning.v2', HKEY = 'reasoning.history.v2', OLD = 'cubetrainer.v1';
 
   // ---------- storage (never required) ----------
-  function loadStats() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
-  function saveStats(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
-  const stats = loadStats();
+  const load = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const settings = Object.assign({ profile: 'balanced', module: null, level: 'medium', entry: 'choose', best: {} }, load(KEY, {}));
+  let history = load(HKEY, []);
+  (function migrate() {
+    if (history.length || load(KEY, null)) return;
+    const old = load(OLD, null);
+    if (!old) return;
+    const map = { easy: ['cubes', 0], medium: ['cubes', 1], hard: ['cubes', 2], series_easy: ['numseries', 0], series_medium: ['numseries', 1], series_hard: ['numseries', 2] };
+    Object.keys(map).forEach((k) => {
+      const d = old[k]; if (!d || !d.answered) return;
+      const n = Math.min(d.answered, 30), c = Math.round((d.correct / d.answered) * n);
+      for (let i = 0; i < n; i++) history.push([map[k][0], map[k][1], i < c ? 1 : 0, 0, 0]);
+    });
+    save(HKEY, history);
+  })();
+  const persist = () => save(KEY, settings);
+  let A = null;
+  const analysis = () => A || (A = P.analyse(history, settings.profile, T.modules()));
+  function log(q, correct, ms) {
+    history.push([q.module, LEVELS.indexOf(q.level), correct ? 1 : 0, Math.round(ms || 0), Date.now()]);
+    if (history.length > 4000) history = history.slice(-4000);
+    save(HKEY, history);
+    A = null;
+  }
 
-  const S = {
-    module: stats.module === 'series' ? 'series' : 'cubes',
-    level: ['easy', 'medium', 'hard'].includes(stats.level) ? stats.level : 'medium',
-    entry: stats.entry === 'type' ? 'type' : 'choose',
-    mode: null, qs: [], idx: 0, picks: [], review: false, timer: null, deadline: 0, startedAt: 0, locked: false, result: null,
-  };
-  const cfg = () => CFG[S.module];
-  const keyOf = (m, l) => (m === 'cubes' ? l : 'series_' + l);
-  const lv = (m, l) => (stats[keyOf(m, l)] = stats[keyOf(m, l)] || { answered: 0, correct: 0, best: null });
-  const makeQ = () => {
-    const q = S.module === 'cubes' ? CE.makeQuestion(S.level) : SE.makeQuestion(S.level);
-    q.entry = S.entry;
-    return q;
-  };
-  const isSeries = (q) => !!q.terms;
-  const isRight = (q, p) => p !== null && p !== undefined && (typeof p === 'object' ? p.typed === q.value : p === q.answer);
+  // ---------- state ----------
+  const S = { type: null, id: null, level: 'medium', qs: [], idx: 0, picks: [], review: false, timer: null, deadline: 0, startedAt: 0, locked: false,
+              qStart: 0, studyT: null, result: null, n: 10, secs: 0, timed: false, lastId: null, from: 'home' };
+  const mod = (id) => T.get(id);
+  const supportsTyping = {};
+  function canType(id) {
+    if (!(id in supportsTyping)) {
+      try { const q = T.make(id, 'easy', Math.random); supportsTyping[id] = q.kind === 'mc' && q.typedAnswer !== undefined; } catch (e) { supportsTyping[id] = false; }
+    }
+    return supportsTyping[id];
+  }
+  const cls = (s) => (s < 40 ? 's-lo' : s < 62 ? 's-mid' : 's-hi');
 
-  // ---------- screens ----------
   function show(id) {
-    ['home', 'quiz', 'results'].forEach((s) => ($('#' + s).hidden = s !== id));
+    ['home', 'module', 'quiz', 'results', 'profile'].forEach((s) => ($('#' + s).hidden = s !== id));
     window.scrollTo(0, 0);
   }
 
+  // ---------- home ----------
   function renderHome() {
-    const c = cfg();
-    document.querySelectorAll('#moduleSeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.module === S.module)));
-    document.querySelectorAll('#levelSeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.level === S.level)));
-    document.querySelectorAll('#entrySeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.entry === S.entry)));
-    $('#entryBox').hidden = S.module !== 'series';
-    $('#tagline').textContent = c.tagline;
-    $('#levelDesc').textContent = c.desc[S.level];
-    $('#timedSub').textContent = c.n + ' questions · ' + c.secs / 60 + ' minutes · no feedback until the end';
-    $('#tips').innerHTML = c.tips.map((t) => '<li>' + t + '</li>').join('');
-    $('#stats').innerHTML = ['easy', 'medium', 'hard'].map((l) => {
-      const d = lv(S.module, l);
-      const acc = d.answered ? Math.round((100 * d.correct) / d.answered) + '% of ' + d.answered : '–';
-      const best = d.best == null ? '' : ' · best test ' + d.best + '/' + c.n;
-      return '<div><span>' + l[0].toUpperCase() + l.slice(1) + '</span><span class="muted">' + acc + best + '</span></div>';
+    const a = analysis();
+    const o = a.overall;
+    const pc = $('#pcScore');
+    if (o.answered < 10) {
+      pc.textContent = '–'; pc.className = 'pc-score';
+      $('#pcTitle').textContent = 'Your abilities profile';
+      $('#pcSub').textContent = 'Take the quick check to see where you stand and what to train.';
+    } else {
+      pc.textContent = Math.round(o.score); pc.className = 'pc-score ' + cls(o.score);
+      $('#pcTitle').textContent = o.band + ' · ' + a.profileName;
+      $('#pcSub').textContent = a.focus.length ? 'Focus: ' + a.focus.slice(0, 3).map((r) => r.name).join(', ') : 'Answer a few more questions to sharpen the picture.';
+    }
+    $('#checkSub').textContent = T.modules().length + ' questions, one per exercise · about 15 minutes';
+    $('#domains').innerHTML = P.DOMAINS.map((d) => {
+      const ms = T.modules().filter((m) => m.domain === d);
+      if (!ms.length) return '';
+      return '<div class="domain"><h2>' + T.DOMAINS[d].name + ' <span class="muted">' + T.DOMAINS[d].blurb + '</span></h2><div class="tiles">' +
+        ms.map((m) => {
+          const e = a.perModule[m.id];
+          const pill = e.n >= 6 ? '<span class="pill ' + cls(e.score) + '">' + Math.round(e.score) + '</span>' : '<span class="pill none">–</span>';
+          return '<button class="tile" data-id="' + m.id + '"><span class="tname">' + esc(m.name) + '</span><span class="tde" lang="de">' + esc(m.de || '') + '</span>' + pill + '</button>';
+        }).join('') + '</div></div>';
     }).join('');
-    if (S.module === 'cubes') $('#heroArt').innerHTML = CE.renderCube(CE.makeQuestion('medium').sample, { label: 'sample cube' });
-    else $('#heroArt').innerHTML = '<div class="heroTerms">3 · 6 · 12<br>24 · <b>?</b></div>';
     show('home');
   }
 
-  // ---------- quiz ----------
-  function start(mode) {
-    S.mode = mode;
-    S.idx = 0;
-    S.picks = [];
-    S.review = false;
-    S.qs = mode === 'timed' ? Array.from({ length: cfg().n }, makeQ) : [makeQ()];
-    clearInterval(S.timer);
-    if (mode === 'timed') {
-      S.startedAt = Date.now();
-      S.deadline = S.startedAt + cfg().secs * 1000;
-      S.timer = setInterval(tick, 250);
-      tick();
-    }
-    $('#timer').hidden = mode !== 'timed';
+  // ---------- exercise page ----------
+  function openModule(id) {
+    S.id = id; settings.module = id; persist();
+    const m = mod(id), a = analysis();
+    const e = a.perModule[id];
+    $('#modTitle').textContent = m.name;
+    $('#modDe').textContent = m.de || '';
+    $('#tips').innerHTML = m.tips.map((t) => '<li>' + esc(t) + '</li>').join('');
+    $('#timedSub').textContent = m.n + ' questions · ' + Math.round(m.secs / 60) + ' minutes · no feedback until the end';
+    $('#entryBox').hidden = !canType(id);
+    renderModuleControls();
+    const rows = LEVELS.map((l, i) => {
+      const lv = e.byLevel[i];
+      const best = settings.best[id + ':' + l];
+      return '<div><span>' + l[0].toUpperCase() + l.slice(1) + '</span><span class="muted">' + (lv.n ? Math.round(lv.acc * 100) + '% of ' + lv.n : '–') + (best != null ? ' · best test ' + best + '/' + m.n : '') + '</span></div>';
+    });
+    $('#modStats').innerHTML = rows.join('');
+    show('module');
+  }
+  function renderModuleControls() {
+    const m = mod(S.id);
+    document.querySelectorAll('#levelSeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.level === settings.level)));
+    document.querySelectorAll('#entrySeg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.entry === settings.entry)));
+    const e = analysis().perModule[S.id];
+    const sug = e.n >= 6 ? ' Suggested for you: ' + P.suggestLevel(e.score) + '.' : '';
+    $('#levelDesc').textContent = m.desc[settings.level] + sug;
+  }
+
+  // ---------- sessions ----------
+  function mk(id, level) {
+    try { return T.make(id, level, Math.random); } catch (e) { return null; }
+  }
+  function startModule(mode) {
+    const m = mod(S.id);
+    S.type = 'module'; S.timed = mode === 'timed'; S.level = settings.level; S.n = m.n; S.secs = m.secs;
+    S.qs = []; S.picks = []; S.idx = 0; S.review = false; S.result = null; S.from = 'module';
+    if (S.timed) { for (let i = 0; i < m.n; i++) S.qs.push(mk(S.id, S.level)); S.qs = S.qs.filter(Boolean); S.n = S.qs.length; }
+    else S.qs = [mk(S.id, S.level)];
+    S.qs.forEach((q) => { q.entry = settings.entry; });
+    begin();
+  }
+  function startSmart(first) {
+    S.type = 'smart'; S.timed = false; S.qs = []; S.picks = []; S.idx = 0; S.review = false; S.result = null; S.from = 'home'; S.lastId = null;
+    const next = first || P.nextSession(analysis(), Math.random, null);
+    pushSmart(next);
+    begin();
+  }
+  function pushSmart(next) {
+    let q = mk(next.id, next.level);
+    for (let i = 0; i < 4 && !q; i++) { const n2 = P.nextSession(analysis(), Math.random, next.id); q = mk(n2.id, n2.level); }
+    q.entry = 'choose'; S.qs.push(q); S.lastId = q.module;
+  }
+  function startCheck() {
+    S.type = 'check'; S.timed = false; S.level = 'medium'; S.from = 'home'; S.result = null; S.review = false; S.picks = []; S.idx = 0;
+    const byDomain = {};
+    T.modules().forEach((m) => { (byDomain[m.domain] = byDomain[m.domain] || []).push(m.id); });
+    const lists = P.DOMAINS.map((d) => T.util.shuffle((byDomain[d] || []).slice(), Math.random));
+    const order = [];
+    for (let i = 0; lists.some((l) => i < l.length); i++) lists.forEach((l) => { if (i < l.length) order.push(l[i]); });
+    S.qs = order.map((id) => mk(id, 'medium')).filter(Boolean);
+    S.qs.forEach((q) => { q.entry = 'choose'; });
+    S.n = S.qs.length;
+    begin();
+  }
+  function startPractice(id, level) {
+    S.id = id; settings.level = level; settings.module = id; persist();
+    startModule('practice');
+  }
+  function begin() {
+    clearInterval(S.timer); clearTimeout(S.studyT);
+    if (S.timed) { S.startedAt = Date.now(); S.deadline = S.startedAt + S.secs * 1000; S.timer = setInterval(tick, 250); tick(); }
+    $('#timer').hidden = !S.timed;
     draw();
     show('quiz');
   }
-
   function tick() {
     const left = Math.max(0, Math.round((S.deadline - Date.now()) / 1000));
     const t = $('#timer');
@@ -321,54 +432,82 @@
     if (left <= 0) finishTimed();
   }
 
+  // ---------- question screen ----------
+  const optClass = (q) => (q.optionStyle === 'figure' ? 'figure' : q.optionStyle === 'grid' ? 'grid-opt' : 'text');
+  const isTyped = (q) => q.kind === 'typed' || (q.entry === 'type' && q.typedAnswer !== undefined);
+
   function draw() {
     const q = S.qs[S.idx];
-    const series = isSeries(q);
-    const typed = series && q.entry === 'type';
     S.locked = false;
-    $('#cubeSample').hidden = series;
-    $('#seriesCard').hidden = !series;
-    $('#prompt').textContent = series ? CFG.series.prompt : CFG.cubes.prompt;
+    $('#askBox').lang = q.lang || 'en';
+    // stimulus
+    const hasStim = !!q.stimulus;
+    $('#stim').hidden = !hasStim;
+    if (hasStim) {
+      $('#stim').className = 'stim ' + (q.stimulusClass === 'paper' ? 'paper' : '') + (q.stimulusTag ? '' : ' nosticky');
+      $('#stimTag').textContent = q.stimulusTag || '';
+      $('#stimBody').innerHTML = q.stimulus;
+    }
+    $('#prompt').textContent = q.prompt;
+    // answers
+    const typed = isTyped(q);
     $('#options').hidden = typed;
     $('#typed').hidden = !typed;
-    $('#explain').hidden = true;
-    if (series) {
-      $('#terms').innerHTML = q.terms.map((t) => '<span class="term">' + t + '</span>').join('') + '<span class="term q">?</span>';
-      $('#options').className = 'grid five';
-      $('#options').innerHTML = q.options.map((v, i) =>
-        '<button class="opt num" data-i="' + i + '" aria-label="Option ' + LETTERS[i] + ': ' + v + '"><span class="letter">' + LETTERS[i] + '</span>' + v + '</button>'
-      ).join('');
+    if (typed) {
       const inp = $('#typedInput');
       inp.value = ''; inp.disabled = false; inp.className = '';
+      const ta = String([].concat(q.typedAnswer)[0]);
+      inp.inputMode = /^-?\d+([.,]\d+)?$/.test(ta) ? (/[.,]/.test(ta) || /^-/.test(ta) ? 'text' : 'numeric') : 'text';
       $('#typedGo').hidden = false;
     } else {
-      $('#sampleCube').innerHTML = CE.renderCube(q.sample, { label: 'sample cube' });
-      $('#options').className = 'grid';
-      $('#options').innerHTML = q.options.map((o, i) =>
-        '<button class="opt" data-i="' + i + '" aria-label="Option ' + LETTERS[i] + '"><span class="letter">' + LETTERS[i] + '</span>' + CE.renderCube(o.state, { label: 'option ' + LETTERS[i] }) + '</button>'
-      ).join('');
+      const style = optClass(q);
+      $('#options').className = 'grid ' + (style === 'text' ? 'list' : 'odd');
+      $('#options').innerHTML = q.options.map((o, i) => {
+        const inner = o.html !== undefined ? o.html : esc(o.text);
+        const wordy = style === 'grid-opt' && o.text !== undefined && String(o.text).length > 7 ? ' wordy' : '';
+        return '<button class="opt ' + style + wordy + '" data-i="' + i + '" aria-label="Option ' + LETTERS[i] + '"><span class="letter">' + LETTERS[i] + '</span>' + inner + '</button>';
+      }).join('');
     }
-    const n = cfg().n;
-    $('#progress').textContent = S.review ? 'Review · question ' + (S.idx + 1) + '/' + n
-      : S.mode === 'timed' ? 'Question ' + (S.idx + 1) + '/' + n
-      : 'Practice · #' + (S.idx + 1) + ' · ' + S.level;
-    $('#feedback').textContent = '';
-    $('#feedback').className = 'feedback';
-    $('#btnNext').hidden = true;
-    $('#btnPrev').hidden = true;
-    if (S.review) { reveal(S.picks[S.idx]); showReviewNav(); }
-    else if (typed) $('#typedInput').focus({ preventScroll: true });
+    // header
+    const m = mod(q.module);
+    const lvl = q.level;
+    $('#progress').textContent = S.review ? 'Review · ' + (S.idx + 1) + '/' + S.n
+      : S.timed ? 'Question ' + (S.idx + 1) + '/' + S.n
+      : S.type === 'smart' ? m.name + ' · ' + lvl
+      : S.type === 'check' ? 'Check ' + (S.idx + 1) + '/' + S.n + ' · ' + m.name
+      : 'Practice · #' + (S.idx + 1) + ' · ' + lvl;
+    $('#feedback').textContent = ''; $('#feedback').className = 'feedback';
+    $('#explain').hidden = true;
+    $('#btnNext').hidden = true; $('#btnPrev').hidden = true;
+    if (S.review) { showAsk(q); reveal(S.picks[S.idx]); showReviewNav(); return; }
+    if (q.study) showStudy(q); else showAsk(q);
   }
-
+  function showStudy(q) {
+    $('#studyBox').hidden = false; $('#askBox').hidden = true;
+    $('#studyBody').innerHTML = q.study.html;
+    $('#studyBody').lang = q.lang || 'en';
+    $('#studyLabel').textContent = q.study.label || 'Memorise';
+    const f = $('#studyFill');
+    f.style.transition = 'none'; f.style.transform = 'scaleX(1)';
+    void f.offsetWidth;
+    f.style.transition = 'transform ' + q.study.secs + 's linear'; f.style.transform = 'scaleX(0)';
+    clearTimeout(S.studyT);
+    S.studyT = setTimeout(() => showAsk(q), q.study.secs * 1000);
+  }
+  function showAsk(q) {
+    clearTimeout(S.studyT);
+    $('#studyBox').hidden = true; $('#askBox').hidden = false;
+    S.qStart = performance.now();
+    if (isTyped(q) && !S.review) $('#typedInput').focus({ preventScroll: true });
+  }
   function reveal(chosen) {
     const q = S.qs[S.idx];
-    const series = isSeries(q);
-    const typed = series && q.entry === 'type';
-    const right = isRight(q, chosen);
+    const typed = isTyped(q);
+    const right = T.isCorrect(q, chosen);
     if (typed) {
       const inp = $('#typedInput');
       inp.disabled = true;
-      if (chosen != null) inp.value = chosen.typed;
+      if (chosen != null && typeof chosen === 'object') inp.value = chosen.typed;
       inp.className = chosen == null ? '' : right ? 'correct' : 'wrong';
       $('#typedGo').hidden = true;
     } else {
@@ -379,125 +518,220 @@
         else el.classList.add('dim');
       });
     }
-    const correctText = series ? (typed ? 'The answer is ' + q.value + '.' : 'The correct answer is ' + LETTERS[q.answer] + ': ' + q.value + '.') : 'The correct cube is ' + LETTERS[q.answer] + '.';
+    let correctText;
+    if (typed) correctText = 'The answer is ' + String([].concat(q.typedAnswer)[0]) + '.';
+    else {
+      const o = q.options[q.answer];
+      correctText = 'The correct answer is ' + LETTERS[q.answer] + (o.text !== undefined ? ': ' + o.text : '') + '.';
+    }
     const fb = $('#feedback');
     if (chosen == null) { fb.textContent = 'Not answered. ' + correctText; fb.className = 'feedback bad'; }
     else if (right) { fb.textContent = 'Correct'; fb.className = 'feedback good'; }
     else { fb.textContent = 'Not quite. ' + correctText; fb.className = 'feedback bad'; }
-    if (series) { $('#explain').textContent = q.explain; $('#explain').hidden = false; }
+    $('#explain').textContent = q.explain; $('#explain').hidden = false;
   }
-
   function answer(pick) {
     if (S.locked || S.review) return;
-    S.locked = true;
     const q = S.qs[S.idx];
+    if (!$('#studyBox').hidden) return;
+    S.locked = true;
+    const ms = performance.now() - S.qStart;
     S.picks[S.idx] = pick;
-    if (S.mode === 'practice') {
-      const d = lv(S.module, S.level);
-      d.answered++; if (isRight(q, pick)) d.correct++;
-      saveStats(stats);
+    log(q, T.isCorrect(q, pick), ms);
+    if (!S.timed) {
       reveal(pick);
       $('#btnNext').hidden = false;
-      $('#btnNext').textContent = 'Next';
+      $('#btnNext').textContent = S.type === 'check' && S.idx + 1 >= S.n ? 'Finish' : 'Next';
       $('#btnNext').focus({ preventScroll: true });
     } else {
       if (typeof pick === 'number') document.querySelectorAll('.opt')[pick].classList.add('chosen');
-      setTimeout(() => {
-        if (S.idx + 1 >= cfg().n) finishTimed(); else { S.idx++; draw(); }
-      }, 200);
+      setTimeout(() => { if (S.idx + 1 >= S.n) finishTimed(); else { S.idx++; draw(); } }, 200);
     }
   }
-
   function submitTyped() {
-    const raw = $('#typedInput').value.trim().replace(/−/g, '-');
-    if (!/^-?\d+$/.test(raw)) { $('#typedInput').focus(); return; }
-    answer({ typed: Number(raw) });
+    const raw = $('#typedInput').value.trim();
+    if (!raw) { $('#typedInput').focus(); return; }
+    answer({ typed: raw });
   }
-
   function next() {
-    if (S.review) { if (S.idx + 1 < cfg().n) { S.idx++; draw(); } return; }
-    if (S.mode === 'practice') { S.qs.push(makeQ()); S.idx++; draw(); }
+    if (S.review) { if (S.idx + 1 < S.n) { S.idx++; draw(); } return; }
+    if (S.type === 'check') { if (S.idx + 1 >= S.n) return finishCheck(); S.idx++; draw(); return; }
+    if (S.type === 'smart') { pushSmart(P.nextSession(analysis(), Math.random, S.lastId)); S.idx++; draw(); return; }
+    S.qs.push(mk(S.id, S.level)); S.qs[S.qs.length - 1].entry = settings.entry; S.idx++; draw();
   }
-
   function showReviewNav() {
-    $('#btnPrev').hidden = false;
-    $('#btnPrev').textContent = S.idx === 0 ? 'Results' : 'Previous';
-    $('#btnNext').hidden = false;
-    $('#btnNext').textContent = S.idx + 1 >= cfg().n ? 'Results' : 'Next';
+    $('#btnPrev').hidden = false; $('#btnPrev').textContent = S.idx === 0 ? 'Results' : 'Previous';
+    $('#btnNext').hidden = false; $('#btnNext').textContent = S.idx + 1 >= S.n ? 'Results' : 'Next';
   }
 
+  // ---------- results ----------
   function finishTimed() {
-    if (S.mode !== 'timed' || S.review || S.result && S.result.final) return;
-    clearInterval(S.timer);
+    if (!S.timed || S.review || S.result) return;
+    clearInterval(S.timer); clearTimeout(S.studyT);
     const secs = Math.round((Date.now() - S.startedAt) / 1000);
     let score = 0;
-    S.qs.forEach((q, i) => { if (isRight(q, S.picks[i])) score++; });
-    const d = lv(S.module, S.level);
-    const answered = S.picks.filter((p) => p != null).length;
-    d.answered += answered;
-    d.correct += score;
-    if (d.best == null || score > d.best) d.best = score;
-    saveStats(stats);
-    S.result = { score, secs, answered, final: true };
+    S.qs.forEach((q, i) => { if (T.isCorrect(q, S.picks[i])) score++; });
+    const key = S.id + ':' + S.level;
+    if (settings.best[key] == null || score > settings.best[key]) { settings.best[key] = score; persist(); }
+    S.result = { score, secs, answered: S.picks.filter((p) => p != null).length, kind: 'timed' };
     renderResults();
   }
-
+  function finishCheck() {
+    let score = 0;
+    S.qs.forEach((q, i) => { if (T.isCorrect(q, S.picks[i])) score++; });
+    S.result = { score, secs: 0, answered: S.picks.length, kind: 'check' };
+    renderResults();
+  }
   function renderResults() {
     const r = S.result;
-    const n = cfg().n;
-    $('#resTitle').textContent = (S.module === 'cubes' ? 'Cubes' : 'Number series') + ' · timed test · ' + S.level;
-    $('#resScore').textContent = r.score + ' / ' + n;
-    const m = Math.floor(r.secs / 60), s = r.secs % 60;
-    $('#resMeta').textContent = 'Time ' + m + ':' + String(s).padStart(2, '0') + ' of ' + cfg().secs / 60 + ':00' + (r.answered < n ? ' · ' + (n - r.answered) + ' unanswered' : '') + '.';
+    if (r.kind === 'check') {
+      $('#resTitle').textContent = 'Quick check done';
+      $('#resMeta').textContent = 'Each exercise was asked once at medium level. One answer per exercise is a rough first look; practice sharpens it.';
+      $('#btnResPrimary').textContent = 'See my profile';
+    } else {
+      $('#resTitle').textContent = mod(S.id).name + ' · timed test · ' + S.level;
+      const m = Math.floor(r.secs / 60), s = r.secs % 60;
+      $('#resMeta').textContent = 'Time ' + m + ':' + String(s).padStart(2, '0') + ' of ' + Math.floor(S.secs / 60) + ':' + String(S.secs % 60).padStart(2, '0') + (r.answered < S.n ? ' · ' + (S.n - r.answered) + ' unanswered' : '') + '.';
+      $('#btnResPrimary').textContent = 'Another timed test';
+    }
+    $('#resScore').textContent = r.score + ' / ' + S.n;
     $('#chips').innerHTML = S.qs.map((q, i) => {
       const p = S.picks[i];
-      const cls = p == null ? 'skip' : isRight(q, p) ? 'ok' : 'no';
-      return '<button class="chip ' + cls + '" data-i="' + i + '" aria-label="Question ' + (i + 1) + (cls === 'ok' ? ' correct' : cls === 'no' ? ' wrong' : ' unanswered') + '">' + (i + 1) + '</button>';
+      const c = p == null ? 'skip' : T.isCorrect(q, p) ? 'ok' : 'no';
+      return '<button class="chip ' + c + '" data-i="' + i + '" aria-label="Question ' + (i + 1) + (c === 'ok' ? ' correct' : c === 'no' ? ' wrong' : ' unanswered') + '">' + (i + 1) + '</button>';
     }).join('');
     S.review = false;
     show('results');
   }
 
-  function quit() {
-    clearInterval(S.timer);
-    S.review = false;
-    S.result = null;
-    renderHome();
+  // ---------- profile ----------
+  function radar(domains) {
+    const cx = 150, cy = 138, R = 92, n = domains.length;
+    const pt = (i, r) => { const a = -Math.PI / 2 + (i * 2 * Math.PI) / n; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+    const poly = (r) => domains.map((_, i) => pt(i, r).map((v) => v.toFixed(1)).join(',')).join(' ');
+    let s = '<svg class="radar" viewBox="0 0 300 276" role="img" aria-label="Domain scores">';
+    [25, 50, 75, 100].forEach((v) => { s += '<polygon points="' + poly((R * v) / 100) + '" fill="none" stroke="var(--line)" stroke-width="1"/>'; });
+    domains.forEach((d, i) => {
+      const [x, y] = pt(i, R); s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + x.toFixed(1) + '" y2="' + y.toFixed(1) + '" stroke="var(--line)"/>';
+      const [lx, ly] = pt(i, R + 18);
+      const anchor = Math.abs(lx - cx) < 6 ? 'middle' : lx > cx ? 'start' : 'end';
+      s += '<text x="' + lx.toFixed(1) + '" y="' + (ly + 4).toFixed(1) + '" text-anchor="' + anchor + '">' + esc(d.name) + '</text>';
+    });
+    s += '<polygon points="' + domains.map((d, i) => pt(i, (R * d.score) / 100).map((v) => v.toFixed(1)).join(',')).join(' ') + '" fill="var(--accent)" fill-opacity=".22" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>';
+    domains.forEach((d, i) => { const [x, y] = pt(i, (R * d.score) / 100); s += '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4" fill="var(--accent)"/>'; });
+    return s + '</svg>';
+  }
+  function renderProfile() {
+    const a = analysis(), o = a.overall;
+    const opts = Object.keys(P.PROFILES).map((k) => '<option value="' + k + '"' + (k === settings.profile ? ' selected' : '') + '>' + P.PROFILES[k].name + '</option>').join('');
+    const w = P.PROFILES[settings.profile].w;
+    const dom = P.DOMAINS.map((d) => ({ key: d, name: T.DOMAINS[d].name.replace(' & attention', ''), score: a.perDomain[d].score, tested: a.perDomain[d].tested, modules: a.perDomain[d].modules }));
+    let h = '';
+    if (o.answered < 10) {
+      $('#profBody').innerHTML = '<div class="card"><h2>Not enough data yet</h2><p class="muted">You have answered ' + o.answered + ' question' + (o.answered === 1 ? '' : 's') + '. The profile needs at least 10 answers to say anything useful. The quick check asks one question per exercise; after that, Smart practice fills in the gaps.</p><button class="primary" id="profCheck">Start the quick check</button></div>';
+      show('profile');
+      return;
+    }
+    h += '<div class="card"><div class="overall"><div class="big-score ' + cls(o.score) + '" style="color:var(--fg)">' + Math.round(o.score) + '</div><div class="meta"><div class="band">' + o.band + '</div><div class="muted small">Likely range ' + Math.round(o.lo) + '–' + Math.round(o.hi) + ' · based on ' + o.answered + ' answers across ' + o.tested + ' of ' + o.total + ' exercises · confidence ' + o.confidence + '</div></div></div>' +
+      '<label class="small muted" for="profileSel" style="display:block;margin-top:12px">Weighted for</label><select class="pill-sel" id="profileSel">' + opts + '</select>' +
+      radar(dom) +
+      '<div class="muted small">Score 50 is the middle of the scale. This is a training estimate from your answers here, not a clinical IQ test.</div></div>';
+
+    // focus
+    h += '<h2 style="margin-top:22px">Where more effort pays off most</h2>';
+    const focus = a.focus.slice(0, 5);
+    if (!focus.length) h += '<p class="muted">Answer at least six questions in an exercise to get advice for it.</p>';
+    focus.forEach((r, i) => {
+      h += '<div class="focusItem"><div class="top"><div><span class="rank">' + (i + 1) + '</span><b>' + esc(r.name) + '</b> <span class="muted small" lang="de">' + esc(r.de || '') + '</span></div><span class="gain">+' + r.gain.toFixed(1) + ' overall</span></div>' +
+        '<div class="small muted" style="margin-top:4px">Now ' + Math.round(r.est.score) + ' · ' + T.DOMAINS[r.domain].name + ' counts ' + Math.round(w[r.domain] * 100) + '% of your target profile</div>' +
+        '<p style="margin:8px 0 0;font-size:15px">' + esc(r.diag.text) + '</p>' +
+        '<button class="btn" data-train="' + r.id + '" data-level="' + r.level + '">Train ' + r.level + '</button></div>';
+    });
+    if (a.measure.length) {
+      h += '<div class="card" style="margin-top:12px"><h3>Not measured yet (' + a.measure.length + ')</h3><div class="muted small">These need about six answers each before they count towards advice.</div><div class="chipRow">' +
+        a.measure.slice(0, 14).map((r) => '<span>' + esc(r.name) + '</span>').join('') + (a.measure.length > 14 ? '<span>+' + (a.measure.length - 14) + ' more</span>' : '') + '</div></div>';
+    }
+    if (a.strengths.length) {
+      h += '<div class="card" style="margin-top:12px"><h3>Your strengths</h3><div class="small">' + a.strengths.map((r) => esc(r.name) + ' (' + Math.round(r.est.score) + ')').join(' · ') + '</div></div>';
+    }
+
+    // all exercises
+    h += '<h2 style="margin-top:22px">All exercises</h2><div class="card" style="padding:4px 14px">';
+    P.DOMAINS.forEach((d) => {
+      const rows = a.rows.filter((r) => r.domain === d);
+      if (!rows.length) return;
+      h += '<div style="padding:10px 0 2px"><h3 style="margin:0">' + T.DOMAINS[d].name + ' <span class="muted small" style="font-weight:400">' + Math.round(a.perDomain[d].score) + '</span></h3></div>';
+      rows.forEach((r) => {
+        const e = r.est;
+        const sp = e.speedRatio === null ? '' : e.speedRatio < 0.8 ? ' · fast' : e.speedRatio > 1.3 ? ' · slow' : ' · on pace';
+        h += '<div class="mrow"><span class="nm2">' + esc(r.name) + '</span><span class="val ' + (e.n >= 6 ? cls(e.score) : '') + '" style="color:' + (e.n >= 6 ? 'var(--fg)' : 'var(--muted)') + '">' + (e.n >= 6 ? Math.round(e.score) : '–') + '</span>' +
+          '<div class="track"><div class="range" style="left:' + e.lo.toFixed(1) + '%;width:' + Math.max(1, e.hi - e.lo).toFixed(1) + '%"></div><div class="dot" style="left:' + e.score.toFixed(1) + '%"></div></div>' +
+          '<span class="sub">' + (e.n ? e.n + ' answers · ' + Math.round(e.acc * 100) + '% correct' + sp : 'not tried yet') + '</span></div>';
+      });
+    });
+    h += '</div>';
+    h += '<details><summary>How scores and advice are calculated</summary><ul>' +
+      '<li>Every answer counts: level (easy, medium, hard) and correct/wrong update an ability estimate per exercise. Hard questions count more when you get them right, and lucky guesses count less because chance is allowed for.</li>' +
+      '<li>Recent answers weigh more than old ones. Few answers give a wide range (the light bar), which narrows as you practise.</li>' +
+      '<li>Score = 50 for the middle of the scale. Domain scores average their exercises; the overall score weights the domains for the target you picked.</li>' +
+      '<li>“Overall points” estimates how much your overall score would rise if you closed half of the distance to a strong level (88) in that exercise, scaled by how trainable it is and how much your target weighs the domain.</li>' +
+      '<li>Speed is your recent median time against a typical time per question; it only changes the advice, not the score.</li></ul></details>';
+    h += '<button class="secondary danger" id="resetBtn" style="margin-top:16px">Reset all my data</button><div id="resetConfirm" hidden class="card" style="margin-top:10px"><p>This deletes your answer history, best scores and settings on this device. It cannot be undone.</p><div class="row"><button class="secondary" id="resetNo">Keep my data</button><button class="primary" id="resetYes" style="background:var(--bad);margin-top:10px">Delete everything</button></div></div>';
+    $('#profBody').innerHTML = h;
+    show('profile');
   }
 
   // ---------- events ----------
-  const persist = () => { stats.module = S.module; stats.level = S.level; stats.entry = S.entry; saveStats(stats); };
-  document.querySelectorAll('#moduleSeg button').forEach((b) => b.addEventListener('click', () => { S.module = b.dataset.module; persist(); renderHome(); }));
-  document.querySelectorAll('#levelSeg button').forEach((b) => b.addEventListener('click', () => { S.level = b.dataset.level; persist(); renderHome(); }));
-  document.querySelectorAll('#entrySeg button').forEach((b) => b.addEventListener('click', () => { S.entry = b.dataset.entry; persist(); renderHome(); }));
-  $('#btnTimed').addEventListener('click', () => start('timed'));
-  $('#btnPractice').addEventListener('click', () => start('practice'));
-  $('#btnQuit').addEventListener('click', () => { if (S.review) renderResults(); else quit(); });
-  $('#btnAgain').addEventListener('click', () => start('timed'));
-  $('#btnHome').addEventListener('click', quit);
+  $('#domains').addEventListener('click', (e) => { const b = e.target.closest('.tile'); if (b) openModule(b.dataset.id); });
+  $('#btnProfile').addEventListener('click', renderProfile);
+  $('#btnSmart').addEventListener('click', () => startSmart());
+  $('#btnCheck').addEventListener('click', startCheck);
+  $('#modBack').addEventListener('click', renderHome);
+  $('#profBack').addEventListener('click', renderHome);
+  document.querySelectorAll('#levelSeg button').forEach((b) => b.addEventListener('click', () => { settings.level = b.dataset.level; persist(); renderModuleControls(); }));
+  document.querySelectorAll('#entrySeg button').forEach((b) => b.addEventListener('click', () => { settings.entry = b.dataset.entry; persist(); renderModuleControls(); }));
+  $('#btnTimed').addEventListener('click', () => startModule('timed'));
+  $('#btnPractice').addEventListener('click', () => startModule('practice'));
+  function leaveQuiz() {
+    clearInterval(S.timer); clearTimeout(S.studyT);
+    if (S.review) { renderResults(); return; }
+    S.result = null;
+    if (S.type === 'module') openModule(S.id); else renderHome();
+  }
+  $('#btnQuit').addEventListener('click', leaveQuiz);
+  $('#btnReady').addEventListener('click', () => showAsk(S.qs[S.idx]));
   $('#options').addEventListener('click', (e) => { const b = e.target.closest('.opt'); if (b) answer(+b.dataset.i); });
   $('#typed').addEventListener('submit', (e) => { e.preventDefault(); submitTyped(); });
-  $('#btnNext').addEventListener('click', () => {
-    if (S.review && S.idx + 1 >= cfg().n) return renderResults();
-    next();
+  $('#btnNext').addEventListener('click', () => { if (S.review && S.idx + 1 >= S.n) return renderResults(); next(); });
+  $('#btnPrev').addEventListener('click', () => { if (S.review) { if (S.idx === 0) renderResults(); else { S.idx--; draw(); } } });
+  $('#chips').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; S.review = true; S.idx = +b.dataset.i; draw(); show('quiz'); });
+  $('#btnResPrimary').addEventListener('click', () => { if (S.result && S.result.kind === 'check') renderProfile(); else startModule('timed'); });
+  $('#btnHome').addEventListener('click', () => { S.result = null; renderHome(); });
+  $('#profBody').addEventListener('click', (e) => {
+    const t = e.target.closest('[data-train]');
+    if (t) return startPractice(t.dataset.train, t.dataset.level);
+    if (e.target.id === 'profCheck') return startCheck();
+    if (e.target.id === 'resetBtn') { $('#resetConfirm').hidden = false; $('#resetBtn').hidden = true; }
+    if (e.target.id === 'resetNo') { $('#resetConfirm').hidden = true; $('#resetBtn').hidden = false; }
+    if (e.target.id === 'resetYes') {
+      try { localStorage.removeItem(KEY); localStorage.removeItem(HKEY); localStorage.removeItem(OLD); } catch (err) {}
+      history = []; A = null; settings.best = {}; settings.profile = 'balanced'; settings.level = 'medium'; settings.entry = 'choose'; settings.module = null;
+      renderHome();
+    }
   });
-  $('#btnPrev').addEventListener('click', () => {
-    if (S.review) { if (S.idx === 0) renderResults(); else { S.idx--; draw(); } }
-  });
-  $('#chips').addEventListener('click', (e) => {
-    const b = e.target.closest('.chip'); if (!b) return;
-    S.review = true; S.idx = +b.dataset.i; draw(); show('quiz');
-  });
+  $('#profBody').addEventListener('change', (e) => { if (e.target.id === 'profileSel') { settings.profile = e.target.value; persist(); A = null; renderProfile(); } });
   document.addEventListener('keydown', (e) => {
     if ($('#quiz').hidden || e.target.tagName === 'INPUT' || e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key.toLowerCase();
     const q = S.qs[S.idx];
-    const typed = q && isSeries(q) && q.entry === 'type';
-    if (!typed && k.length === 1 && LETTERS.includes(k) && LETTERS.indexOf(k) < q.options.length) answer(LETTERS.indexOf(k));
+    if (!q) return;
+    if (!$('#studyBox').hidden && (k === 'enter' || k === ' ')) { e.preventDefault(); showAsk(q); return; }
+    if (!isTyped(q) && k.length === 1 && LETTERS.includes(k) && LETTERS.indexOf(k) < (q.options || []).length) answer(LETTERS.indexOf(k));
     else if ((k === 'enter' || k === 'arrowright') && !$('#btnNext').hidden) $('#btnNext').click();
     else if (k === 'arrowleft' && !$('#btnPrev').hidden) $('#btnPrev').click();
   });
 
+  window.__trainer = { S, history: () => history, analysis, renderProfile };
   renderHome();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 })();

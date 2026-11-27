@@ -269,7 +269,11 @@
     return out + '</svg>';
   }
 
-  const api = { ROTS, SYMBOLS, LEVELS, VIEW, makeQuestion, verifyQuestion, renderCube, signature, rotate, randomCube, mulberry32 };
+  const api = {
+    ROTS, SYMBOLS, LEVELS, VIEW, NORMALS, makeQuestion, verifyQuestion, renderCube, signature, rotate, randomCube, mulberry32,
+    // building blocks for other modules (e.g. net folding)
+    faceAt, quarterTurns, possibleFromSample, mutate, clone, eq, neg, cross, mul,
+  };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.CubeEngine = api;
 })(typeof self !== 'undefined' ? self : this);
